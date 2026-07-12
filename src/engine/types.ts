@@ -1,0 +1,135 @@
+/** Pure, serializable types for the Speed Tic Tac Toe engine. */
+
+export type Symbol_ = 'X' | 'O'
+
+export type PieceId = 'X1' | 'X2' | 'X3' | 'O1' | 'O2' | 'O3'
+
+/** Cell index 0..8, row-major (0 = top-left as seen by Player 1). */
+export type CellIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
+
+/** board[cell] = piece occupying it, or null. */
+export type Board = (PieceId | null)[]
+
+export type PlayerId = 'p1' | 'p2'
+
+export type MatchFormat = 'best3' | 'best5' | 'best7' | 'unlimited'
+
+export type ClockType = 'untimed' | 'speed' | 'duel'
+
+export interface ClockConfig {
+  type: ClockType
+  /** Per-player starting time for duel clocks, in ms. */
+  duelMs: number
+  /** Per-turn limit in ms, or null for no turn limit. */
+  turnLimitMs: number | null
+}
+
+export interface MatchConfig {
+  format: MatchFormat
+  clock: ClockConfig
+  sound: boolean
+  haptics: boolean
+}
+
+export type RoundPhase = 'placement' | 'movement'
+
+export type RoundEndReason =
+  | 'line'
+  | 'turnTimeout'
+  | 'duelTimeout'
+  | 'speedTimeout'
+  | 'manual'
+
+export type RoundResult =
+  | {
+      kind: 'win'
+      winner: PlayerId
+      winnerSymbol: Symbol_
+      reason: Exclude<RoundEndReason, 'speedTimeout' | 'manual'>
+      /** Winning line cells when reason === 'line'. */
+      line: CellIndex[] | null
+    }
+  | { kind: 'draw'; reason: 'speedTimeout' | 'manual' }
+
+export interface MatchResult {
+  /** null = ended manually with tied scores (no winner). */
+  winner: PlayerId | null
+  scores: Record<PlayerId, number>
+  roundsPlayed: number
+  endedManually: boolean
+}
+
+/**
+ * Clock bookkeeping. Remaining values are the amounts left the last time the
+ * clocks were settled. While `runningSince` is a timestamp, the live remaining
+ * value is `stored - (now - runningSince)` for each clock that is running.
+ */
+export interface ClockState {
+  /** Timestamp (ms epoch) when clocks started running, or null when stopped. */
+  runningSince: number | null
+  /** Shared speed-round countdown remaining, ms (only meaningful for 'speed'). */
+  sharedMs: number
+  /** Duel clock remaining per symbol, ms (only meaningful for 'duel'). */
+  duelMs: Record<Symbol_, number>
+  /** Turn timer remaining, ms (only meaningful when turnLimitMs !== null). */
+  turnMs: number
+}
+
+export type MatchStatus =
+  | 'ready' // between rounds, waiting for "Start round"
+  | 'playing'
+  | 'roundComplete'
+  | 'matchComplete'
+
+export interface MatchState {
+  /** Schema version for persistence. */
+  v: 1
+  players: Record<PlayerId, string>
+  config: MatchConfig
+  winsNeeded: number | null
+  scores: Record<PlayerId, number>
+  roundNumber: number
+  roundsPlayed: number
+  /** Which symbol Player 1 holds this round. */
+  p1Symbol: Symbol_
+  status: MatchStatus
+  paused: boolean
+  board: Board
+  /** Zero-based count of successful actions this round; expected piece = order[turn % 6]. */
+  turn: number
+  phase: RoundPhase
+  /** Piece currently selected for movement, or null. */
+  selected: PieceId | null
+  clock: ClockState
+  roundResult: RoundResult | null
+  matchResult: MatchResult | null
+}
+
+export type MatchAction =
+  | { type: 'START_ROUND'; now: number }
+  | { type: 'PLACE'; cell: CellIndex; now: number }
+  | { type: 'SELECT'; piece: PieceId }
+  | { type: 'DESELECT' }
+  | { type: 'MOVE'; cell: CellIndex; now: number }
+  | { type: 'PAUSE'; now: number }
+  | { type: 'RESUME'; now: number }
+  | { type: 'CHECK_TIMEOUT'; now: number }
+  | { type: 'RESTART_ROUND' }
+  | { type: 'END_ROUND_MANUAL'; now: number }
+  | { type: 'NEXT_ROUND' }
+  | { type: 'END_MATCH' }
+
+export const PIECE_ORDER: readonly PieceId[] = ['X1', 'O1', 'X2', 'O2', 'X3', 'O3']
+
+export const WIN_LINES: readonly (readonly [CellIndex, CellIndex, CellIndex])[] = [
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+  [0, 4, 8],
+  [2, 4, 6],
+]
+
+export const SPEED_ROUND_MS = 2 * 60 * 1000
