@@ -19,6 +19,7 @@ import type { MatchAction, MatchConfig, MatchState } from './engine/types.ts'
 import { primeAudio, setSoundEnabled, sfx } from './lib/sound.ts'
 import { haptics, setHapticsEnabled } from './lib/haptics.ts'
 import { resolveLayout } from './lib/device.ts'
+import { aiDisplayName, chooseAiMove } from './engine/ai.ts'
 
 type Screen = 'welcome' | 'setup' | 'config' | 'game'
 
@@ -163,11 +164,59 @@ export default function App() {
     }
   }, [match])
 
+  // ---- computer opponent ----
+  // Acts when it is the AI's turn: a short "think" delay, then (in the
+  // movement phase) a visible select, then the move — fast, but readable.
+  useEffect(() => {
+    if (!match || !match.ai) return
+    if (match.status !== 'playing' || match.paused) return
+    if (match.roundResult !== null || match.undoRequest !== null) return
+    const aiSymbol = match.p1Symbol === 'X' ? 'O' : 'X'
+    if (activeSymbol(match) !== aiSymbol) return
+
+    const timers: ReturnType<typeof setTimeout>[] = []
+    const think = 650 + Math.random() * 450
+    if (match.selected === null) {
+      const decision = chooseAiMove(match)
+      timers.push(
+        setTimeout(() => {
+          if (decision.select) dispatch({ type: 'SELECT', piece: decision.select })
+          else dispatch({ type: 'PLACE', cell: decision.cell, now: Date.now() })
+        }, think),
+      )
+    } else {
+      // Piece already selected (previous effect run): finish the move.
+      const decision = chooseAiMove(match)
+      timers.push(
+        setTimeout(
+          () => dispatch({ type: 'MOVE', cell: decision.cell, now: Date.now() }),
+          450 + Math.random() * 250,
+        ),
+      )
+    }
+    return () => timers.forEach(clearTimeout)
+  }, [match])
+
+  // The computer approves undo requests automatically after a beat.
+  useEffect(() => {
+    if (!match?.ai || !match.undoRequest || match.undoRequest.approvals.p2) return
+    const t = setTimeout(
+      () => dispatch({ type: 'APPROVE_UNDO', player: 'p2', now: Date.now() }),
+      400,
+    )
+    return () => clearTimeout(t)
+  }, [match])
+
   // ---- navigation handlers ----
 
   const startMatch = useCallback(
     (p1: string, p2: string) => {
-      dispatch({ type: 'SET_MATCH', match: createMatch({ p1, p2 }, configFromPrefs(prefs)) })
+      const ai = prefs.p2Kind === 'computer' ? { level: prefs.aiLevel } : null
+      const p2Name = ai ? aiDisplayName(ai.level) : p2
+      dispatch({
+        type: 'SET_MATCH',
+        match: createMatch({ p1, p2: p2Name }, configFromPrefs(prefs), ai),
+      })
       setScreen('game')
       if (!prefs.tutorialDone) setTutorialOpen(true)
     },
@@ -187,9 +236,13 @@ export default function App() {
   }, [])
 
   const savedNames =
-    prefs.p1Name.trim() && prefs.p2Name.trim() && prefs.p1Name !== prefs.p2Name
-      ? { p1: prefs.p1Name, p2: prefs.p2Name }
-      : null
+    prefs.p2Kind === 'computer'
+      ? prefs.p1Name.trim()
+        ? { p1: prefs.p1Name, p2: aiDisplayName(prefs.aiLevel) }
+        : null
+      : prefs.p1Name.trim() && prefs.p2Name.trim() && prefs.p1Name !== prefs.p2Name
+        ? { p1: prefs.p1Name, p2: prefs.p2Name }
+        : null
 
   // Live status announcement for assistive tech.
   let announcement = ''
@@ -235,9 +288,15 @@ export default function App() {
         <Setup
           initialP1={prefs.p1Name}
           initialP2={prefs.p2Name}
+          initialP2Kind={prefs.p2Kind}
+          initialAiLevel={prefs.aiLevel}
           onBack={() => setScreen('welcome')}
-          onContinue={(p1, p2) => {
-            updatePrefs({ p1Name: p1, p2Name: p2 })
+          onContinue={(p1, p2, opponent) => {
+            if (opponent.kind === 'computer') {
+              updatePrefs({ p1Name: p1, p2Kind: 'computer', aiLevel: opponent.level })
+            } else {
+              updatePrefs({ p1Name: p1, p2Name: p2, p2Kind: 'human' })
+            }
             setScreen('config')
           }}
         />
@@ -257,7 +316,7 @@ export default function App() {
         <GameScreen
           state={match}
           now={now}
-          layout={resolveLayout(prefs.layout)}
+          layout={match.ai ? 'sideBySide' : resolveLayout(prefs.layout)}
           onToggleLayout={() =>
             updatePrefs({
               layout: resolveLayout(prefs.layout) === 'faceToFace' ? 'sideBySide' : 'faceToFace',

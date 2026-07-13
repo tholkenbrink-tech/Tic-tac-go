@@ -18,7 +18,7 @@ describe('full match integration', () => {
     // Welcome -> setup
     await user.click(screen.getByRole('button', { name: /new match/i }))
     await user.type(screen.getByLabelText(/player 1/i), 'Ada')
-    await user.type(screen.getByLabelText(/player 2/i), 'Grace')
+    await user.type(screen.getByLabelText('Player 2 name'), 'Grace')
     await user.click(screen.getByRole('button', { name: /continue/i }))
 
     // Configuration: untimed (no turn-limit control exists for it), best of 3
@@ -187,6 +187,33 @@ describe('full match integration', () => {
     const result = await screen.findByRole('dialog', { name: /match result/i }, { timeout: 3000 })
     expect(within(result).getByText(/match ended level/i)).toBeInTheDocument()
   })
+
+  it('plays against the computer: select it in setup, it moves by itself', async () => {
+    savePrefs({ ...DEFAULT_PREFS, p1Name: 'Thorben', tutorialDone: true })
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /new match/i }))
+
+    // Player 2 becomes the computer, strength selectable.
+    await user.click(screen.getByRole('button', { name: /computer/i }))
+    await user.click(screen.getByRole('button', { name: 'Beginner' }))
+    expect(screen.getByText(/≈ 800 Elo/i)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /start match/i }))
+
+    // Ready screen shows the computer opponent by name.
+    const ready = await screen.findByRole('dialog', { name: /round ready/i })
+    expect(within(ready).getByText(/Computer · Beginner/i)).toBeInTheDocument()
+    await user.click(within(ready).getByRole('button', { name: /^start round$/i }))
+
+    // Human (X) places; the computer answers with O1 on its own.
+    await user.click(screen.getByRole('button', { name: /place x1 on cell 5$/i }))
+    await screen.findByRole(
+      'button',
+      { name: /cell \d, (occupied by )?O1/i },
+      { timeout: 4000 },
+    )
+  }, 15_000)
 
   it('restores a saved in-progress match paused', async () => {
     savePrefs({ ...DEFAULT_PREFS, p1Name: 'Ada', p2Name: 'Grace', tutorialDone: true })

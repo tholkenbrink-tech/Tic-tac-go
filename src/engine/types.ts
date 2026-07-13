@@ -93,7 +93,7 @@ export const MAX_UNDOS_PER_ROUND = 3
 
 export interface MatchState {
   /** Schema version for persistence. */
-  v: 5
+  v: 6
   players: Record<PlayerId, string>
   config: MatchConfig
   winsNeeded: number | null
@@ -122,6 +122,8 @@ export interface MatchState {
   undosUsed: number
   /** Pending undo approval, or null. Clocks are stopped while it is open. */
   undoRequest: UndoRequest | null
+  /** Computer opponent (always Player 2), or null for human vs human. */
+  ai: { level: 'beginner' | 'medium' | 'pro' } | null
 }
 
 export type MatchAction =

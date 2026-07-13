@@ -7,14 +7,15 @@ import { stopClock } from './clocks.ts'
 import { activeSymbol } from './reducer.ts'
 import { ALL_PIECES } from './types.ts'
 import type { ClockType, MatchFormat, MatchState, PieceId } from './types.ts'
+import type { AiLevel } from './ai.ts'
 
 export const STORAGE_KEYS = {
-  match: 'sttt.v5.match',
+  match: 'sttt.v6.match',
   prefs: 'sttt.v1.prefs',
 } as const
 
 /** Older match-save keys that are discarded on load. */
-const LEGACY_MATCH_KEYS = ['sttt.v1.match', 'sttt.v2.match', 'sttt.v3.match', 'sttt.v4.match']
+const LEGACY_MATCH_KEYS = ['sttt.v1.match', 'sttt.v2.match', 'sttt.v3.match', 'sttt.v4.match', 'sttt.v5.match']
 
 export type LayoutPref = 'auto' | 'faceToFace' | 'sideBySide'
 
@@ -30,6 +31,9 @@ export interface Prefs {
   haptics: boolean
   tutorialDone: boolean
   layout: LayoutPref
+  /** Player 2 kind: human opponent or the computer. */
+  p2Kind: 'human' | 'computer'
+  aiLevel: AiLevel
 }
 
 export const DEFAULT_PREFS: Prefs = {
@@ -44,6 +48,8 @@ export const DEFAULT_PREFS: Prefs = {
   haptics: true,
   tutorialDone: false,
   layout: 'auto',
+  p2Kind: 'human',
+  aiLevel: 'medium',
 }
 
 type Storage_ = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
@@ -65,7 +71,7 @@ function isRecord(x: unknown): x is Record<string, unknown> {
 
 export function validateMatch(x: unknown): x is MatchState {
   if (!isRecord(x)) return false
-  if (x.v !== 5) return false
+  if (x.v !== 6) return false
   if (!isRecord(x.players) || typeof x.players.p1 !== 'string' || typeof x.players.p2 !== 'string')
     return false
   if (!isRecord(x.config) || !isRecord(x.config.clock)) return false
@@ -99,6 +105,10 @@ export function validateMatch(x: unknown): x is MatchState {
     if (typeof entry.turn !== 'number') return false
   }
   if (typeof x.undosUsed !== 'number' || x.undosUsed < 0) return false
+  if (x.ai !== null && x.ai !== undefined) {
+    if (!isRecord(x.ai) || !['beginner', 'medium', 'pro'].includes(x.ai.level as string))
+      return false
+  }
   return true
 }
 
@@ -185,6 +195,10 @@ export function loadPrefs(): Prefs {
       layout: ['auto', 'faceToFace', 'sideBySide'].includes(parsed.layout as string)
         ? (parsed.layout as LayoutPref)
         : DEFAULT_PREFS.layout,
+      p2Kind: parsed.p2Kind === 'computer' ? 'computer' : 'human',
+      aiLevel: ['beginner', 'medium', 'pro'].includes(parsed.aiLevel as string)
+        ? (parsed.aiLevel as AiLevel)
+        : DEFAULT_PREFS.aiLevel,
     }
   } catch {
     return DEFAULT_PREFS

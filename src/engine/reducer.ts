@@ -58,10 +58,11 @@ export function normalizeClockConfig(clock: ClockConfig): ClockConfig {
 export function createMatch(
   players: { p1: string; p2: string },
   config: MatchConfig,
+  ai: MatchState['ai'] = null,
 ): MatchState {
   config = { ...config, clock: normalizeClockConfig(config.clock) }
   return {
-    v: 5,
+    v: 6,
     players: { p1: players.p1, p2: players.p2 },
     config,
     winsNeeded: winsNeededFor(config.format),
@@ -81,6 +82,7 @@ export function createMatch(
     history: [],
     undosUsed: 0,
     undoRequest: null,
+    ai,
   }
 }
 

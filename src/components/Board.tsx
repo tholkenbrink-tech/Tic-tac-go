@@ -11,6 +11,8 @@ interface BoardProps {
   /** True while no overlay is open, enabling arrow-key/Enter play. */
   keyboardEnabled: boolean
   onEscape: () => void
+  /** True while the computer is moving: board renders live but rejects input. */
+  inputLocked?: boolean
 }
 
 /** Centers of each cell in the 0..100 SVG space for the win-line overlay. */
@@ -20,12 +22,22 @@ function cellCenter(cell: CellIndex): { x: number; y: number } {
   return { x: col * 33.4 + 16.7, y: row * 33.4 + 16.7 }
 }
 
-export function Board({ state, onCellTap, onPieceTap, keyboardEnabled, onEscape }: BoardProps) {
+export function Board({
+  state,
+  onCellTap,
+  onPieceTap,
+  keyboardEnabled,
+  onEscape,
+  inputLocked = false,
+}: BoardProps) {
+  // Visual liveness (glow, selection, targets) vs. input acceptance: during
+  // the computer's turn the board stays visually live but rejects taps.
   const interactive =
     state.status === 'playing' &&
     !state.paused &&
     state.roundResult === null &&
     state.undoRequest === null
+  const acceptInput = interactive && !inputLocked
   const active = interactive ? expectedPiece(state.turn) : null
   const targets = new Set<CellIndex>(
     interactive && state.phase === 'movement' && state.selected
@@ -44,8 +56,8 @@ export function Board({ state, onCellTap, onPieceTap, keyboardEnabled, onEscape 
   // visible once a key is used, so touch players never see it.
   const [cursor, setCursor] = useState<CellIndex>(4)
   const [kbActive, setKbActive] = useState(false)
-  const stateRef = useRef({ state, interactive, keyboardEnabled })
-  stateRef.current = { state, interactive, keyboardEnabled }
+  const stateRef = useRef({ state, interactive: acceptInput, keyboardEnabled })
+  stateRef.current = { state, interactive: acceptInput, keyboardEnabled }
   const actionsRef = useRef({ onCellTap, onPieceTap, onEscape })
   actionsRef.current = { onCellTap, onPieceTap, onEscape }
 
@@ -132,7 +144,7 @@ export function Board({ state, onCellTap, onPieceTap, keyboardEnabled, onEscape 
             const isActivePieceHere = occupant !== null && occupant === active
             let label: string
             let enabled = false
-            if (!interactive) {
+            if (!acceptInput) {
               label = occupant ? `Cell ${cell + 1}, ${occupant}` : `Cell ${cell + 1}, empty`
             } else if (state.phase === 'placement') {
               enabled = occupant === null
@@ -153,7 +165,7 @@ export function Board({ state, onCellTap, onPieceTap, keyboardEnabled, onEscape 
                 : `Cell ${cell + 1}, empty`
             }
 
-            const isCursor = kbActive && interactive && cursor === cell
+            const isCursor = kbActive && acceptInput && cursor === cell
             return (
               <button
                 key={cell}

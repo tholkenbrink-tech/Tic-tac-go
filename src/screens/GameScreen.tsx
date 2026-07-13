@@ -3,7 +3,7 @@ import { Board } from '../components/Board.tsx'
 import { ConfirmDialog } from '../components/ConfirmDialog.tsx'
 import { PlayerPanel } from '../components/PlayerPanel.tsx'
 import { Tutorial } from './Tutorial.tsx'
-import { canRequestUndo, symbolForPlayer } from '../engine/reducer.ts'
+import { activeSymbol, canRequestUndo, symbolForPlayer } from '../engine/reducer.ts'
 import { MAX_UNDOS_PER_ROUND } from '../engine/types.ts'
 import type {
   CellIndex,
@@ -189,6 +189,11 @@ export function GameScreen({
 
   const undosLeft = MAX_UNDOS_PER_ROUND - state.undosUsed
   const overlayOpen = menuOpen || rulesOpen || confirm !== null
+  // During the computer's turn the human must not act for it.
+  const aiTurn =
+    state.ai !== null &&
+    state.status === 'playing' &&
+    activeSymbol(state) === symbolForPlayer(state, 'p2')
 
   return (
     <div className={`game game--${layout === 'sideBySide' ? 'side' : 'face'}`}>
@@ -198,6 +203,7 @@ export function GameScreen({
         <Board
           state={state}
           keyboardEnabled={!overlayOpen}
+          inputLocked={aiTurn}
           onEscape={() => dispatch({ type: 'DESELECT' })}
           onCellTap={(cell: CellIndex) => {
             if (state.phase === 'placement') dispatch({ type: 'PLACE', cell, now: Date.now() })
@@ -340,18 +346,26 @@ export function GameScreen({
       {playing && state.undoRequest && !menuOpen && !rulesOpen && confirm === null && (
         <div className="overlay" role="dialog" aria-modal="true" aria-label="Undo approval">
           <div className="overlay-card">
-            <div className={layout === 'faceToFace' ? 'flip' : ''}>
-              <button
-                type="button"
-                className={`btn undo-approve${state.undoRequest.approvals.p2 ? ' undo-approve--done' : ''}`}
-                disabled={state.undoRequest.approvals.p2}
-                onClick={() => dispatch({ type: 'APPROVE_UNDO', player: 'p2', now: Date.now() })}
-              >
+            {state.ai ? (
+              <p className="hint" style={{ textAlign: 'center' }}>
                 {state.undoRequest.approvals.p2
                   ? `✓ ${state.players.p2} approved`
-                  : `${state.players.p2}: approve undo`}
-              </button>
-            </div>
+                  : `${state.players.p2} approves automatically…`}
+              </p>
+            ) : (
+              <div className={layout === 'faceToFace' ? 'flip' : ''}>
+                <button
+                  type="button"
+                  className={`btn undo-approve${state.undoRequest.approvals.p2 ? ' undo-approve--done' : ''}`}
+                  disabled={state.undoRequest.approvals.p2}
+                  onClick={() => dispatch({ type: 'APPROVE_UNDO', player: 'p2', now: Date.now() })}
+                >
+                  {state.undoRequest.approvals.p2
+                    ? `✓ ${state.players.p2} approved`
+                    : `${state.players.p2}: approve undo`}
+                </button>
+              </div>
+            )}
             <h2>↶ Undo last move?</h2>
             <p className="hint" style={{ fontSize: 15 }}>
               Both players must approve. {undosLeft} of {MAX_UNDOS_PER_ROUND} undos left this
