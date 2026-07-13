@@ -203,6 +203,38 @@ export function GameScreen({
             else dispatch({ type: 'SELECT', piece })
           }}
         />
+
+        {/* Pause overlay covers only the board so the controls row (Menu,
+            Resume) stays reachable — ending a paused game must not require
+            resuming it first. */}
+        {playing && state.paused && !menuOpen && !rulesOpen && confirm === null && (
+          <div
+            className="overlay overlay--board"
+            role="dialog"
+            aria-modal="false"
+            aria-label="Game paused"
+          >
+            <div className="overlay-card overlay-card--compact">
+              {layout === 'faceToFace' && (
+                <p className="pause-flag flip" aria-hidden>
+                  ⏸ Paused
+                </p>
+              )}
+              <button
+                type="button"
+                className="btn btn--primary"
+                style={{ minHeight: 64 }}
+                onClick={() => {
+                  menuPausedRef.current = false
+                  dispatch({ type: 'RESUME', now: Date.now() })
+                }}
+              >
+                ▶ Resume
+              </button>
+              <p className="pause-flag">⏸ Paused</p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="controls">
@@ -336,31 +368,6 @@ export function GameScreen({
             >
               Cancel
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Pause overlay */}
-      {playing && state.paused && !menuOpen && !rulesOpen && confirm === null && (
-        <div className="overlay" role="dialog" aria-modal="true" aria-label="Game paused">
-          <div className="overlay-card">
-            {layout === 'faceToFace' && (
-              <p className="pause-flag flip" aria-hidden>
-                ⏸ Paused
-              </p>
-            )}
-            <button
-              type="button"
-              className="btn btn--primary"
-              style={{ minHeight: 64 }}
-              onClick={() => {
-                menuPausedRef.current = false
-                dispatch({ type: 'RESUME', now: Date.now() })
-              }}
-            >
-              ▶ Resume
-            </button>
-            <p className="pause-flag">⏸ Paused</p>
           </div>
         </div>
       )}

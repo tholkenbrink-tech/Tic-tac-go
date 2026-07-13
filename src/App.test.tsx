@@ -147,6 +147,24 @@ describe('full match integration', () => {
     expect(screen.getByRole('button', { name: /undo last move, 2 of 3 left/i })).toBeEnabled()
   })
 
+  it('can end the match while paused, without resuming first', async () => {
+    savePrefs({ ...DEFAULT_PREFS, p1Name: 'Ada', p2Name: 'Grace', tutorialDone: true })
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /quick play/i }))
+    await user.click(await screen.findByRole('button', { name: /^start round$/i }))
+    await user.click(screen.getByRole('button', { name: /place x1 on cell 1$/i }))
+    await user.click(screen.getByRole('button', { name: /pause/i }))
+    expect(screen.getByRole('dialog', { name: /game paused/i })).toBeInTheDocument()
+
+    // The menu must stay reachable while paused.
+    await user.click(screen.getByRole('button', { name: /menu/i }))
+    await user.click(screen.getByRole('button', { name: 'End match' }))
+    await user.click(screen.getAllByRole('button', { name: 'End match' }).pop()!)
+    const result = await screen.findByRole('dialog', { name: /match result/i }, { timeout: 3000 })
+    expect(within(result).getByText(/match ended level/i)).toBeInTheDocument()
+  })
+
   it('restores a saved in-progress match paused', async () => {
     savePrefs({ ...DEFAULT_PREFS, p1Name: 'Ada', p2Name: 'Grace', tutorialDone: true })
     let m = createMatch(

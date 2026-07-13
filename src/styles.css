@@ -1085,6 +1085,22 @@ button {
   font-weight: 900;
 }
 
+/* Overlay variant that covers only the board (inside .game-mid), leaving the
+   player panels and the controls row interactive. */
+.overlay--board {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  border-radius: 18px;
+  padding: 12px;
+}
+
+.overlay-card--compact {
+  padding: 14px;
+  gap: 10px;
+  max-width: 300px;
+}
+
 .flip {
   transform: rotate(180deg);
 }
