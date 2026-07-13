@@ -91,9 +91,9 @@ The **Auto** setting re-resolves live when a phone is rotated: upright →
 face-to-face, landscape → side-by-side. Tablets keep face-to-face in both
 orientations, and an explicit layout choice always overrides Auto.
 
-In every layout the active player's panel glows and pulses in their symbol's
-color while the waiting player's panel dims, so it is always obvious whose
-turn it is — in addition to the explicit "PLACE X2 / MOVE O3" banner on both
+In every layout each player's panel is permanently tinted with their personal
+color, and the active player's panel glows and pulses in that color while the
+waiting player's panel dims, so it is always obvious whose turn it is — in addition to the explicit "PLACE X2 / MOVE O3" banner on both
 panels.
 
 ### Desktop
