@@ -34,14 +34,14 @@ export function PlayerPanel({ state, viewer, now }: PanelProps) {
 
   const roundInfo =
     state.winsNeeded !== null
-      ? `RD ${state.roundNumber} · FIRST TO ${state.winsNeeded}`
-      : `RD ${state.roundNumber}`
+      ? `Round ${state.roundNumber} · first to ${state.winsNeeded}`
+      : `Round ${state.roundNumber}`
 
   let statusText: string
   if (state.paused) statusText = 'PAUSED'
   else if (state.status === 'ready') statusText = 'GET READY'
   else if (state.roundResult) statusText = 'ROUND OVER'
-  else statusText = isMyTurn ? 'YOUR TURN' : `${state.players[activePlayer]}'S TURN`
+  else statusText = isMyTurn ? 'YOUR TURN' : 'WAITING…'
 
   return (
     <section
@@ -60,20 +60,27 @@ export function PlayerPanel({ state, viewer, now }: PanelProps) {
           <SymbolTag symbol={otherSymbol} owner={other} />
           <span className="name">{state.players[other]}</span>
         </span>
-        <span className="panel-round">{roundInfo}</span>
       </div>
 
       <div className="panel-status">
         <div className="turn-banner">
           {state.paused || state.status !== 'playing' || state.roundResult ? (
             <span className="turn-verb turn-verb--dim">{statusText}</span>
-          ) : (
+          ) : isMyTurn ? (
             <>
+              {/* The imperative verb is only ever shown to the player who acts. */}
               <span className={`turn-verb turn-verb--pc tint-${activePlayer}`}>
                 {verb} {piece}
               </span>
               <span className="turn-next">
-                {isMyTurn ? 'you' : statusText.toLowerCase()} · next {nextPiece}
+                your turn ({piece}) · next {nextPiece}
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="turn-verb turn-verb--dim">WAITING…</span>
+              <span className="turn-next">
+                {state.players[activePlayer]}&apos;s turn ({piece}) · your next: {nextPiece}
               </span>
             </>
           )}
@@ -110,6 +117,8 @@ export function PlayerPanel({ state, viewer, now }: PanelProps) {
           )}
         </div>
       </div>
+
+      <div className="panel-meta">{roundInfo}</div>
     </section>
   )
 }
