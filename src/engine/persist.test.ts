@@ -40,8 +40,8 @@ describe('match persistence', () => {
     expect(restored!.board[3]).toBe('O1')
     expect(restored!.turn).toBe(2)
     expect(restored!.players).toEqual({ p1: 'Ada', p2: 'Grace' })
-    // 10s of shared time elapsed by save time.
-    expect(restored!.clock.sharedMs).toBe(110_000)
+    // 2s of the current turn elapsed by save time (turn timer reset at T0+8s).
+    expect(restored!.clock.turnMs).toBe(18_000)
   })
 
   it('discards saves with an unknown schema version', () => {

@@ -297,7 +297,7 @@ describe('rounds and match scoring', () => {
 
 describe('timers', () => {
   it('expires the turn timer and awards the round to the opponent', () => {
-    let s = started({ clock: { type: 'untimed', duelMs: 120_000, turnLimitMs: 10_000 } })
+    let s = started({ clock: { type: 'speed', duelMs: 120_000, turnLimitMs: 10_000 } })
     s = matchReducer(s, { type: 'CHECK_TIMEOUT', now: T0 + 9_999 })
     expect(s.status).toBe('playing')
     s = matchReducer(s, { type: 'CHECK_TIMEOUT', now: T0 + 10_000 })
@@ -307,7 +307,7 @@ describe('timers', () => {
   })
 
   it('resets the turn timer after every valid action', () => {
-    let s = started({ clock: { type: 'untimed', duelMs: 120_000, turnLimitMs: 10_000 } })
+    let s = started({ clock: { type: 'speed', duelMs: 120_000, turnLimitMs: 10_000 } })
     s = place(s, 0, T0 + 9_000)
     // 9s elapsed but timer was reset; at T0+18s only 9s of the new turn have passed.
     s = matchReducer(s, { type: 'CHECK_TIMEOUT', now: T0 + 18_000 })
@@ -318,21 +318,28 @@ describe('timers', () => {
   })
 
   it('a move attempted after the deadline resolves the timeout instead', () => {
-    let s = started({ clock: { type: 'untimed', duelMs: 120_000, turnLimitMs: 10_000 } })
+    let s = started({ clock: { type: 'speed', duelMs: 120_000, turnLimitMs: 10_000 } })
     s = place(s, 0, T0 + 10_001)
     expect(s.board[0]).toBeNull()
     expect(s.roundResult).toMatchObject({ reason: 'turnTimeout' })
   })
 
-  it('expires the shared speed round clock as a draw', () => {
+  it('speed round is turn-limit only: the limit is defaulted and losing it loses the round', () => {
+    // A speed config without an explicit limit gets the 10s default.
     let s = started({ clock: { type: 'speed', duelMs: 120_000, turnLimitMs: null } })
-    s = place(s, 0, T0 + 60_000)
-    s = matchReducer(s, { type: 'CHECK_TIMEOUT', now: T0 + 119_999 })
+    expect(s.config.clock.turnLimitMs).toBe(10_000)
+    s = matchReducer(s, { type: 'CHECK_TIMEOUT', now: T0 + 9_999 })
     expect(s.status).toBe('playing')
-    s = matchReducer(s, { type: 'CHECK_TIMEOUT', now: T0 + 120_000 })
+    s = matchReducer(s, { type: 'CHECK_TIMEOUT', now: T0 + 10_000 })
     expect(s.status).toBe('roundComplete')
-    expect(s.roundResult).toEqual({ kind: 'draw', reason: 'speedTimeout' })
-    expect(s.scores).toEqual({ p1: 0, p2: 0 })
+    // No draw: the active player (X) loses on timeout.
+    expect(s.roundResult).toMatchObject({ kind: 'win', winnerSymbol: 'O', reason: 'turnTimeout' })
+  })
+
+  it('untimed mode never has a turn limit', () => {
+    const s = started({ clock: { type: 'untimed', duelMs: 120_000, turnLimitMs: 10_000 } })
+    expect(s.config.clock.turnLimitMs).toBeNull()
+    expect(matchReducer(s, { type: 'CHECK_TIMEOUT', now: T0 + 999_999 })).toBe(s)
   })
 
   it('only charges the active player on the duel clock and switches after moves', () => {
@@ -366,14 +373,14 @@ describe('timers', () => {
     d = matchReducer(d, { type: 'CHECK_TIMEOUT', now: T0 + 12_000 })
     expect(d.roundResult).toMatchObject({ reason: 'duelTimeout' })
 
-    // Speed clock and turn limit tie exactly: turn limit wins the tie.
-    let t = started({ clock: { type: 'speed', duelMs: 120_000, turnLimitMs: 120_000 } })
-    t = matchReducer(t, { type: 'CHECK_TIMEOUT', now: T0 + 120_000 })
+    // Exact tie between turn limit and duel clock: turn limit wins the tie.
+    let t = started({ clock: { type: 'duel', duelMs: 10_000, turnLimitMs: 10_000 } })
+    t = matchReducer(t, { type: 'CHECK_TIMEOUT', now: T0 + 10_000 })
     expect(t.roundResult).toMatchObject({ reason: 'turnTimeout' })
   })
 
   it('processes a timeout only once', () => {
-    let s = started({ clock: { type: 'untimed', duelMs: 120_000, turnLimitMs: 10_000 } })
+    let s = started({ clock: { type: 'speed', duelMs: 120_000, turnLimitMs: 10_000 } })
     s = matchReducer(s, { type: 'CHECK_TIMEOUT', now: T0 + 10_000 })
     const again = matchReducer(s, { type: 'CHECK_TIMEOUT', now: T0 + 10_500 })
     expect(again).toBe(s)
@@ -396,12 +403,11 @@ describe('pause and resume', () => {
     s = matchReducer(s, { type: 'RESUME', now: T0 + 500_000 })
     expect(s.paused).toBe(false)
     const r = remaining(s.clock, s.config.clock, activeSymbol(s), T0 + 500_000)
-    expect(r.sharedMs).toBe(110_000)
     expect(r.turnMs).toBe(20_000)
   })
 
   it('ignores board actions and timeouts while paused', () => {
-    let s = started({ clock: { type: 'untimed', duelMs: 120_000, turnLimitMs: 10_000 } })
+    let s = started({ clock: { type: 'speed', duelMs: 120_000, turnLimitMs: 10_000 } })
     s = matchReducer(s, { type: 'PAUSE', now: T0 + 1_000 })
     expect(place(s, 0, T0 + 2_000)).toBe(s)
     expect(matchReducer(s, { type: 'CHECK_TIMEOUT', now: T0 + 999_999 })).toBe(s)

@@ -21,9 +21,9 @@ describe('full match integration', () => {
     await user.type(screen.getByLabelText('Player 2'), 'Grace')
     await user.click(screen.getByRole('button', { name: /continue/i }))
 
-    // Configuration: untimed, no turn limit, best of 3
+    // Configuration: untimed (no turn-limit control exists for it), best of 3
     await user.click(screen.getByRole('button', { name: 'Untimed' }))
-    await user.click(screen.getByRole('button', { name: 'None' }))
+    expect(screen.queryByRole('button', { name: 'None' })).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Best of 3' }))
     await user.click(screen.getByRole('button', { name: /start match/i }))
 

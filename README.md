@@ -57,20 +57,20 @@ A pending approval does not survive a reload — it is simply cancelled.
 
 ### Clocks
 
-Clock type and turn limit are independent settings:
+Three clock modes:
 
-- **Untimed** — no clocks at all.
-- **Speed round** — one shared 2:00 countdown; if it hits zero the round is a
-  draw.
-- **Duel clock** — chess-style per-player clocks (1/2/3 minutes each); only the
-  active player's clock runs, and reaching zero loses the round.
-- **Turn limit** (optional, combinable with any clock type) — 10/20/30 seconds
-  per turn; expiring loses the round for the active player.
+- **Untimed** — no clocks at all; play until someone wins or the round is
+  ended manually.
+- **Speed round** — a per-turn countdown (10/20/30 seconds, the whole mode):
+  run out of time on your move and you lose the round.
+- **Duel clock** — chess-style per-player clocks (1/2/3 minutes each); only
+  the active player's clock runs, and reaching zero loses the round. An
+  optional per-turn limit can be combined with it.
 
 Near-simultaneous deadlines are resolved by their actual expiry timestamps,
-with ties broken in the order turn limit → duel clock → shared clock. Clocks
-are computed from timestamps, not tick counters, so they stay accurate under
-slow rendering; below ten seconds they display tenths and below five they pulse
+with ties broken in favor of the turn limit over the duel clock. Clocks are
+computed from timestamps, not tick counters, so they stay accurate under slow
+rendering; below ten seconds they display tenths and below five they pulse
 red.
 
 ## Layouts and devices

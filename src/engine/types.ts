@@ -20,7 +20,11 @@ export interface ClockConfig {
   type: ClockType
   /** Per-player starting time for duel clocks, in ms. */
   duelMs: number
-  /** Per-turn limit in ms, or null for no turn limit. */
+  /**
+   * Per-turn limit in ms. Always null for 'untimed', always set for 'speed'
+   * (it IS the speed-round mode), optional for 'duel'. Enforced by
+   * normalizeClockConfig at match creation.
+   */
   turnLimitMs: number | null
 }
 
@@ -33,23 +37,18 @@ export interface MatchConfig {
 
 export type RoundPhase = 'placement' | 'movement'
 
-export type RoundEndReason =
-  | 'line'
-  | 'turnTimeout'
-  | 'duelTimeout'
-  | 'speedTimeout'
-  | 'manual'
+export type RoundEndReason = 'line' | 'turnTimeout' | 'duelTimeout' | 'manual'
 
 export type RoundResult =
   | {
       kind: 'win'
       winner: PlayerId
       winnerSymbol: Symbol_
-      reason: Exclude<RoundEndReason, 'speedTimeout' | 'manual'>
+      reason: Exclude<RoundEndReason, 'manual'>
       /** Winning line cells when reason === 'line'. */
       line: CellIndex[] | null
     }
-  | { kind: 'draw'; reason: 'speedTimeout' | 'manual' }
+  | { kind: 'draw'; reason: 'manual' }
 
 export interface MatchResult {
   /** null = ended manually with tied scores (no winner). */
@@ -67,8 +66,6 @@ export interface MatchResult {
 export interface ClockState {
   /** Timestamp (ms epoch) when clocks started running, or null when stopped. */
   runningSince: number | null
-  /** Shared speed-round countdown remaining, ms (only meaningful for 'speed'). */
-  sharedMs: number
   /** Duel clock remaining per symbol, ms (only meaningful for 'duel'). */
   duelMs: Record<Symbol_, number>
   /** Turn timer remaining, ms (only meaningful when turnLimitMs !== null). */
@@ -96,7 +93,7 @@ export const MAX_UNDOS_PER_ROUND = 3
 
 export interface MatchState {
   /** Schema version for persistence. */
-  v: 3
+  v: 4
   players: Record<PlayerId, string>
   config: MatchConfig
   winsNeeded: number | null
@@ -164,4 +161,5 @@ export const WIN_LINES: readonly (readonly [CellIndex, CellIndex, CellIndex])[] 
   [2, 4, 6],
 ]
 
-export const SPEED_ROUND_MS = 2 * 60 * 1000
+/** Default per-turn limit for the speed-round mode. */
+export const DEFAULT_SPEED_TURN_MS = 10_000

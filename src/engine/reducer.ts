@@ -19,8 +19,9 @@ import {
   pieceCell,
   symbolOf,
 } from './rules.ts'
-import { MAX_UNDOS_PER_ROUND } from './types.ts'
+import { DEFAULT_SPEED_TURN_MS, MAX_UNDOS_PER_ROUND } from './types.ts'
 import type {
+  ClockConfig,
   MatchAction,
   MatchConfig,
   MatchFormat,
@@ -43,12 +44,24 @@ export function winsNeededFor(format: MatchFormat): number | null {
   }
 }
 
+/**
+ * Force clock-config invariants: untimed has no turn limit, speed-round
+ * always has one (that limit IS the mode).
+ */
+export function normalizeClockConfig(clock: ClockConfig): ClockConfig {
+  if (clock.type === 'untimed') return { ...clock, turnLimitMs: null }
+  if (clock.type === 'speed')
+    return { ...clock, turnLimitMs: clock.turnLimitMs ?? DEFAULT_SPEED_TURN_MS }
+  return clock
+}
+
 export function createMatch(
   players: { p1: string; p2: string },
   config: MatchConfig,
 ): MatchState {
+  config = { ...config, clock: normalizeClockConfig(config.clock) }
   return {
-    v: 3,
+    v: 4,
     players: { p1: players.p1, p2: players.p2 },
     config,
     winsNeeded: winsNeededFor(config.format),
@@ -137,9 +150,6 @@ function applyTimeout(state: MatchState, hit: TimeoutResolution): MatchState {
   const active = activeSymbol(state)
   const clock = stopClock(state.clock, state.config.clock, active, hit.at)
   const base = { ...state, clock }
-  if (hit.reason === 'speedTimeout') {
-    return finishRound(base, { kind: 'draw', reason: 'speedTimeout' })
-  }
   const loserSymbol = active
   const winnerSymbol: Symbol_ = loserSymbol === 'X' ? 'O' : 'X'
   return finishRound(base, {

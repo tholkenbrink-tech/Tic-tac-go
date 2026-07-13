@@ -4,18 +4,11 @@
  * accuracy never depends on render frequency.
  */
 
-import {
-  SPEED_ROUND_MS,
-  type ClockConfig,
-  type ClockState,
-  type RoundEndReason,
-  type Symbol_,
-} from './types.ts'
+import type { ClockConfig, ClockState, RoundEndReason, Symbol_ } from './types.ts'
 
 export function freshClock(config: ClockConfig): ClockState {
   return {
     runningSince: null,
-    sharedMs: SPEED_ROUND_MS,
     duelMs: { X: config.duelMs, O: config.duelMs },
     turnMs: config.turnLimitMs ?? 0,
   }
@@ -40,7 +33,6 @@ export function settleClock(
   const elapsed = Math.max(0, now - clock.runningSince)
   return {
     runningSince: now,
-    sharedMs: config.type === 'speed' ? Math.max(0, clock.sharedMs - elapsed) : clock.sharedMs,
     duelMs:
       config.type === 'duel'
         ? { ...clock.duelMs, [activeSymbol]: Math.max(0, clock.duelMs[activeSymbol] - elapsed) }
@@ -71,22 +63,21 @@ export function remaining(
   config: ClockConfig,
   activeSymbol: Symbol_,
   now: number,
-): { sharedMs: number; duelMs: Record<Symbol_, number>; turnMs: number } {
+): { duelMs: Record<Symbol_, number>; turnMs: number } {
   const settled =
     clock.runningSince === null ? clock : settleClock(clock, config, activeSymbol, now)
-  return { sharedMs: settled.sharedMs, duelMs: settled.duelMs, turnMs: settled.turnMs }
+  return { duelMs: settled.duelMs, turnMs: settled.turnMs }
 }
 
 export interface TimeoutResolution {
-  reason: Extract<RoundEndReason, 'turnTimeout' | 'duelTimeout' | 'speedTimeout'>
+  reason: Extract<RoundEndReason, 'turnTimeout' | 'duelTimeout'>
   /** The absolute timestamp at which the deadline passed. */
   at: number
 }
 
 /**
  * Determine which deadline (if any) has passed at `now`, resolving by actual
- * expiry timestamps. Ties break in the order: turn limit, duel clock, shared
- * speed clock.
+ * expiry timestamps. Ties break in the order: turn limit, duel clock.
  */
 export function resolveTimeout(
   clock: ClockState,
@@ -103,13 +94,9 @@ export function resolveTimeout(
   if (config.type === 'duel') {
     candidates.push({ reason: 'duelTimeout', at: since + clock.duelMs[activeSymbol] })
   }
-  if (config.type === 'speed') {
-    candidates.push({ reason: 'speedTimeout', at: since + clock.sharedMs })
-  }
   const priority: Record<TimeoutResolution['reason'], number> = {
     turnTimeout: 0,
     duelTimeout: 1,
-    speedTimeout: 2,
   }
   const passed = candidates
     .filter((c) => c.at <= now)

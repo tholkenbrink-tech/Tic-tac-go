@@ -31,7 +31,6 @@ const REASON_TEXT: Record<Exclude<RoundResult['reason'], never>, string> = {
   line: 'Three in a row',
   turnTimeout: 'Turn time expired',
   duelTimeout: 'Duel clock expired',
-  speedTimeout: 'Speed round time expired',
   manual: 'Round ended manually',
 }
 
@@ -39,12 +38,18 @@ function clockRules(state: MatchState): { k: string; v: string }[] {
   const c = state.config.clock
   const rules: { k: string; v: string }[] = []
   if (c.type === 'untimed') rules.push({ k: 'Clock', v: 'Untimed' })
-  if (c.type === 'speed') rules.push({ k: 'Clock', v: 'Speed round · shared 2:00' })
-  if (c.type === 'duel') rules.push({ k: 'Clock', v: `Duel · ${c.duelMs / 60_000} min each` })
-  rules.push({
-    k: 'Turn limit',
-    v: c.turnLimitMs === null ? 'None' : `${c.turnLimitMs / 1000}s per turn`,
-  })
+  if (c.type === 'speed')
+    rules.push({
+      k: 'Clock',
+      v: `Speed round · ${(c.turnLimitMs ?? 0) / 1000}s per turn`,
+    })
+  if (c.type === 'duel') {
+    rules.push({ k: 'Clock', v: `Duel · ${c.duelMs / 60_000} min each` })
+    rules.push({
+      k: 'Turn limit',
+      v: c.turnLimitMs === null ? 'None' : `${c.turnLimitMs / 1000}s per turn`,
+    })
+  }
   rules.push({
     k: 'Format',
     v: state.winsNeeded === null ? 'Unlimited' : `First to ${state.winsNeeded} wins`,

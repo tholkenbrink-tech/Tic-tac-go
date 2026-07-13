@@ -84,14 +84,6 @@ export function PlayerPanel({ state, viewer, now }: PanelProps) {
         </div>
 
         <div className="clocks">
-          {clock.type === 'speed' && (
-            <div
-              className={`clock clock--mine${playing && isUrgent(rem.sharedMs) ? ' clock--urgent' : ''}`}
-            >
-              <span className="clock-label">Round</span>
-              <span className="clock-value">{formatClock(rem.sharedMs)}</span>
-            </div>
-          )}
           {clock.type === 'duel' && (
             <>
               <div
