@@ -45,18 +45,11 @@ describe('full match integration', () => {
     await user.click(cellButton(/place x3 on cell 6$/i))
     await user.click(cellButton(/place o3 on cell 8$/i))
 
-    // Movement phase: X1 -> cell 3 (index 2), O1 -> cell 5 (index 4),
+    // Movement phase: destinations glow immediately — one tap moves the
+    // expected piece. X1 -> cell 3 (index 2), O1 -> cell 5 (index 4),
     // X2 -> cell 9 (index 8) wins the 3-6-9 column (indices 2,5,8).
-    await user.click(cellButton(/select x1 to move/i))
-    // Cancelling works: tap again deselects, then reselect.
-    await user.click(cellButton(/cancel selection of x1/i))
-    await user.click(cellButton(/select x1 to move/i))
     await user.click(cellButton(/move x1 to cell 3$/i))
-
-    await user.click(cellButton(/select o1 to move/i))
     await user.click(cellButton(/move o1 to cell 5$/i))
-
-    await user.click(cellButton(/select x2 to move/i))
     await user.click(cellButton(/move x2 to cell 9$/i))
 
     // Ada (X) wins the round.

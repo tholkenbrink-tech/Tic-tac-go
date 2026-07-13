@@ -68,7 +68,7 @@ const STEPS: { title: string; body: string; board: StepBoard }[] = [
   },
   {
     title: 'Then keep moving',
-    body: 'Once all six are down, the same order repeats — but now each piece moves to any empty cell. Tap the glowing piece, then tap its destination.',
+    body: 'Once all six are down, the same order repeats — but now each piece moves. The glowing piece is ready automatically: just tap any highlighted empty cell to move it there.',
     board: {
       cells: [
         { symbol: 'X', num: 1 },

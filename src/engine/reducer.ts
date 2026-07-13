@@ -61,7 +61,6 @@ export function createMatch(
     board: emptyBoard(),
     turn: 0,
     phase: 'placement',
-    selected: null,
     clock: freshClock(config.clock),
     roundResult: null,
     matchResult: null,
@@ -93,7 +92,6 @@ function resetRound(state: MatchState): MatchState {
     board: emptyBoard(),
     turn: 0,
     phase: 'placement',
-    selected: null,
     clock: freshClock(state.config.clock),
     roundResult: null,
     history: [],
@@ -112,7 +110,6 @@ function finishRound(state: MatchState, result: RoundResult): MatchState {
     roundsPlayed: state.roundsPlayed + 1,
     status: 'roundComplete',
     paused: false,
-    selected: null,
     roundResult: result,
     undoRequest: null,
   }
@@ -173,7 +170,6 @@ function applyUndo(state: MatchState, now: number): MatchState {
     board: [...entry.board],
     turn: entry.turn,
     phase: phaseForTurn(entry.turn),
-    selected: null,
     history: state.history.slice(0, -1),
     undosUsed: state.undosUsed + 1,
     undoRequest: null,
@@ -228,25 +224,12 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
       }
     }
 
-    case 'SELECT': {
-      if (!canAct(state)) return state
-      if (state.phase !== 'movement') return state
-      if (action.piece !== expectedPiece(state.turn)) return state
-      if (pieceCell(state.board, action.piece) === null) return state
-      return { ...state, selected: action.piece }
-    }
-
-    case 'DESELECT': {
-      if (!canAct(state)) return state
-      return { ...state, selected: null }
-    }
-
     case 'MOVE': {
       if (!canAct(state)) return state
       const hit = resolveTimeout(state.clock, state.config.clock, activeSymbol(state), action.now)
       if (hit) return applyTimeout(state, hit)
-      const piece = state.selected
-      if (piece === null) return state
+      // The expected piece is implicitly selected: one tap on a destination moves it.
+      const piece = expectedPiece(state.turn)
       if (!isMoveValid(state.board, state.turn, piece, action.cell)) return state
 
       const from = pieceCell(state.board, piece)
@@ -262,7 +245,6 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
           {
             ...state,
             board,
-            selected: null,
             clock: { ...settled, runningSince: null },
           },
           { kind: 'win', winner, winnerSymbol: win.symbol, reason: 'line', line: win.line },
@@ -274,7 +256,6 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
         ...state,
         board,
         turn,
-        selected: null,
         clock: resetTurnTimer(settled, state.config.clock),
         history: [...state.history, { board: state.board, turn: state.turn }],
       }
@@ -285,7 +266,6 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
       return {
         ...state,
         paused: true,
-        selected: null,
         clock: stopClock(state.clock, state.config.clock, activeSymbol(state), action.now),
       }
     }
@@ -330,7 +310,6 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
       if (!canRequestUndo(state)) return state
       return {
         ...state,
-        selected: null,
         undoRequest: { approvals: { p1: false, p2: false } },
         clock: stopClock(state.clock, state.config.clock, activeSymbol(state), action.now),
       }
@@ -360,7 +339,6 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
         ...state,
         status: 'matchComplete',
         paused: false,
-        selected: null,
         undoRequest: null,
         clock: { ...state.clock, runningSince: null },
         matchResult: {

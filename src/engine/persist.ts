@@ -108,7 +108,6 @@ export function saveMatch(state: MatchState, now: number): void {
   if (!storage) return
   const toSave: MatchState = {
     ...state,
-    selected: null,
     clock: stopClock(state.clock, state.config.clock, activeSymbol(state), now),
   }
   try {
@@ -144,7 +143,6 @@ export function loadMatch(): MatchState | null {
     }
     return {
       ...parsed,
-      selected: null,
       paused: parsed.status === 'playing' ? true : parsed.paused,
       // A pending undo approval does not survive a reload — approvals are
       // in-the-moment consent, so the request is simply cancelled.

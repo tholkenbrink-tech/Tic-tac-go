@@ -153,11 +153,6 @@ export default function App() {
     if (prev.undosUsed < match.undosUsed) {
       sfx.undo()
       haptics.move()
-      return
-    }
-    if (match.selected !== null && prev.selected === null) {
-      sfx.select()
-      haptics.tap()
     }
   }, [match])
 

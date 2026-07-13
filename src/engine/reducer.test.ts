@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { activeSymbol, createMatch, matchReducer, playerForSymbol, winsNeededFor } from './reducer.ts'
+import { expectedPiece } from './rules.ts'
 import { remaining } from './clocks.ts'
 import type { CellIndex, MatchConfig, MatchState, PieceId } from './types.ts'
 
@@ -27,9 +28,9 @@ function place(state: MatchState, cell: CellIndex, now = T0): MatchState {
   return matchReducer(state, { type: 'PLACE', cell, now })
 }
 
-function move(state: MatchState, piece: PieceId, cell: CellIndex, now = T0): MatchState {
-  const selected = matchReducer(state, { type: 'SELECT', piece })
-  return matchReducer(selected, { type: 'MOVE', cell, now })
+/** One-tap move: the expected piece is implicitly selected by the engine. */
+function move(state: MatchState, cell: CellIndex, now = T0): MatchState {
+  return matchReducer(state, { type: 'MOVE', cell, now })
 }
 
 /** Places six pieces with no winner: X on 0,4,5 / O on 3,1,8. */
@@ -100,49 +101,49 @@ describe('placement', () => {
 })
 
 describe('movement', () => {
-  it('moves only via select-then-move and repeats the piece order', () => {
+  it('moves the expected piece with a single action and repeats the piece order', () => {
     let s = placeAllNoWin(started())
-    // Direct MOVE without selection is ignored.
-    expect(matchReducer(s, { type: 'MOVE', cell: 2, now: T0 })).toBe(s)
 
-    s = move(s, 'X1', 2) // X1: 0 -> 2
+    s = move(s, 2) // X1: 0 -> 2
     expect(s.board[0]).toBeNull()
     expect(s.board[2]).toBe('X1')
     expect(s.turn).toBe(7)
 
-    s = move(s, 'O1', 0) // O1: 3 -> 0
+    s = move(s, 0) // O1: 3 -> 0
     expect(s.board[0]).toBe('O1')
-    s = move(s, 'X2', 3) // X2: 4 -> 3
-    s = move(s, 'O2', 6) // O2: 1 -> 6
-    s = move(s, 'X3', 4) // X3: 5 -> 4
-    s = move(s, 'O3', 7) // O3: 8 -> 7
+    s = move(s, 3) // X2: 4 -> 3
+    s = move(s, 6) // O2: 1 -> 6
+    s = move(s, 4) // X3: 5 -> 4
+    s = move(s, 7) // O3: 8 -> 7
     // Order wraps back to X1.
     expect(s.turn).toBe(12)
-    const sel = matchReducer(s, { type: 'SELECT', piece: 'X1' })
-    expect(sel.selected).toBe('X1')
+    expect(expectedPiece(s.turn)).toBe('X1')
   })
 
-  it('rejects selecting or moving the wrong piece', () => {
-    const s = placeAllNoWin(started())
-    expect(matchReducer(s, { type: 'SELECT', piece: 'O1' })).toBe(s)
-    expect(matchReducer(s, { type: 'SELECT', piece: 'X2' })).toBe(s)
-    const after = move(s, 'X2', 2)
-    expect(after.board[2]).toBeNull()
+  it('always moves exactly the expected piece — no other piece can act', () => {
+    const s = placeAllNoWin(started()) // X1 (at cell 0) is expected
+    const after = move(s, 2)
+    expect(after.board[2]).toBe('X1')
+    // O1, X2, X3, O2, O3 all stayed where they were placed.
+    expect(after.board[3]).toBe('O1')
+    expect(after.board[4]).toBe('X2')
+    expect(after.board[1]).toBe('O2')
+    expect(after.board[5]).toBe('X3')
+    expect(after.board[8]).toBe('O3')
   })
 
   it('rejects moving onto an occupied cell and onto its own cell', () => {
     const s = placeAllNoWin(started())
-    const ontoOccupied = move(s, 'X1', 3)
-    expect(ontoOccupied.turn).toBe(6)
-    const ontoSelf = move(s, 'X1', 0)
-    expect(ontoSelf.turn).toBe(6)
+    const ontoOccupied = move(s, 3) // O1 sits on 3
+    expect(ontoOccupied).toBe(s)
+    const ontoSelf = move(s, 0) // X1's own cell
+    expect(ontoSelf).toBe(s)
   })
 
-  it('allows deselecting by DESELECT', () => {
-    const s = placeAllNoWin(started())
-    const sel = matchReducer(s, { type: 'SELECT', piece: 'X1' })
-    const desel = matchReducer(sel, { type: 'DESELECT' })
-    expect(desel.selected).toBeNull()
+  it('ignores MOVE during the placement phase', () => {
+    let s = started()
+    s = place(s, 0)
+    expect(matchReducer(s, { type: 'MOVE', cell: 4, now: T0 })).toBe(s)
   })
 
   it('detects a win after a movement', () => {
@@ -150,9 +151,9 @@ describe('movement', () => {
     let s = started()
     for (const cell of [0, 3, 1, 6, 5, 7] as CellIndex[]) s = place(s, cell)
     expect(s.phase).toBe('movement')
-    s = move(s, 'X1', 2) // X1: 0 -> 2
-    s = move(s, 'O1', 4) // O1: 3 -> 4
-    s = move(s, 'X2', 8) // X2: 1 -> 8 completes X on 2, 5, 8
+    s = move(s, 2) // X1: 0 -> 2
+    s = move(s, 4) // O1: 3 -> 4
+    s = move(s, 8) // X2: 1 -> 8 completes X on 2, 5, 8
     expect(s.status).toBe('roundComplete')
     expect(s.roundResult).toMatchObject({
       kind: 'win',
@@ -164,7 +165,7 @@ describe('movement', () => {
 
   it('never allows more than three pieces per symbol', () => {
     let s = placeAllNoWin(started())
-    s = move(s, 'X1', 2)
+    s = move(s, 2)
     const xs = s.board.filter((p) => p?.startsWith('X'))
     const os = s.board.filter((p) => p?.startsWith('O'))
     expect(xs).toHaveLength(3)
@@ -398,10 +399,9 @@ describe('pause and resume', () => {
     expect(matchReducer(s, { type: 'CHECK_TIMEOUT', now: T0 + 999_999 })).toBe(s)
   })
 
-  it('clears any selection when pausing', () => {
+  it('ignores movement while paused', () => {
     let s = placeAllNoWin(started())
-    s = matchReducer(s, { type: 'SELECT', piece: 'X1' })
     s = matchReducer(s, { type: 'PAUSE', now: T0 })
-    expect(s.selected).toBeNull()
+    expect(matchReducer(s, { type: 'MOVE', cell: 2, now: T0 + 100 })).toBe(s)
   })
 })

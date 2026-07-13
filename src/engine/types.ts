@@ -111,8 +111,6 @@ export interface MatchState {
   /** Zero-based count of successful actions this round; expected piece = order[turn % 6]. */
   turn: number
   phase: RoundPhase
-  /** Piece currently selected for movement, or null. */
-  selected: PieceId | null
   clock: ClockState
   roundResult: RoundResult | null
   matchResult: MatchResult | null
@@ -127,8 +125,6 @@ export interface MatchState {
 export type MatchAction =
   | { type: 'START_ROUND'; now: number }
   | { type: 'PLACE'; cell: CellIndex; now: number }
-  | { type: 'SELECT'; piece: PieceId }
-  | { type: 'DESELECT' }
   | { type: 'MOVE'; cell: CellIndex; now: number }
   | { type: 'PAUSE'; now: number }
   | { type: 'RESUME'; now: number }

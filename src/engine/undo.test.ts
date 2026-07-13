@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { canRequestUndo, createMatch, matchReducer } from './reducer.ts'
 import { remaining } from './clocks.ts'
-import type { CellIndex, MatchConfig, MatchState, PieceId } from './types.ts'
+import type { CellIndex, MatchConfig, MatchState } from './types.ts'
 
 const T0 = 1_000_000
 
@@ -26,9 +26,8 @@ function place(state: MatchState, cell: CellIndex, now = T0): MatchState {
   return matchReducer(state, { type: 'PLACE', cell, now })
 }
 
-function move(state: MatchState, piece: PieceId, cell: CellIndex, now = T0): MatchState {
-  const selected = matchReducer(state, { type: 'SELECT', piece })
-  return matchReducer(selected, { type: 'MOVE', cell, now })
+function move(state: MatchState, cell: CellIndex, now = T0): MatchState {
+  return matchReducer(state, { type: 'MOVE', cell, now })
 }
 
 function fullUndo(state: MatchState, now = T0): MatchState {
@@ -84,7 +83,7 @@ describe('undo semantics', () => {
   it('reverts a movement back to its previous cell', () => {
     let s = started()
     for (const cell of [0, 3, 1, 6, 5, 7] as CellIndex[]) s = place(s, cell)
-    s = move(s, 'X1', 2)
+    s = move(s, 2)
     expect(s.board[2]).toBe('X1')
     s = fullUndo(s)
     expect(s.board[0]).toBe('X1')
