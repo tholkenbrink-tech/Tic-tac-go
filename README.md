@@ -82,7 +82,18 @@ icons are generated locally).
 
 ## Deployment
 
-### Cloudflare Pages
+### Cloudflare Workers (current production setup)
+
+The repo ships a `wrangler.jsonc` that deploys `dist/` as a static-assets-only
+Worker with SPA fallback. In the Workers Builds dashboard (or locally):
+
+- Build command: `npm run build`
+- Deploy command: `npx wrangler deploy`
+- No environment variables required.
+
+Production: https://tictacgo.t-holkenbrink.workers.dev
+
+### Cloudflare Pages (alternative)
 
 - Build command: `npm run build`
 - Build output directory: `dist`
