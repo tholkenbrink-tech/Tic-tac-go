@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { expectedPiece, pieceCell, symbolOf, validDestinations } from '../engine/rules.ts'
 import type { CellIndex, MatchState, PieceId } from '../engine/types.ts'
 import { PIECE_ORDER } from '../engine/types.ts'
@@ -8,6 +8,9 @@ interface BoardProps {
   state: MatchState
   onCellTap: (cell: CellIndex) => void
   onPieceTap: (piece: PieceId) => void
+  /** True while no overlay is open, enabling arrow-key/Enter play. */
+  keyboardEnabled: boolean
+  onEscape: () => void
 }
 
 /** Centers of each cell in the 0..100 SVG space for the win-line overlay. */
@@ -17,9 +20,12 @@ function cellCenter(cell: CellIndex): { x: number; y: number } {
   return { x: col * 33.4 + 16.7, y: row * 33.4 + 16.7 }
 }
 
-export function Board({ state, onCellTap, onPieceTap }: BoardProps) {
+export function Board({ state, onCellTap, onPieceTap, keyboardEnabled, onEscape }: BoardProps) {
   const interactive =
-    state.status === 'playing' && !state.paused && state.roundResult === null
+    state.status === 'playing' &&
+    !state.paused &&
+    state.roundResult === null &&
+    state.undoRequest === null
   const active = interactive ? expectedPiece(state.turn) : null
   const targets = new Set<CellIndex>(
     interactive && state.phase === 'movement' && state.selected
@@ -32,6 +38,75 @@ export function Board({ state, onCellTap, onPieceTap }: BoardProps) {
   // Double-tap protection lives in the reducer: a repeated tap is an invalid
   // action (occupied cell, no selection, wrong piece) and is ignored, while
   // round transitions disable every cell below.
+
+  // Keyboard play: arrow keys move a cursor over the grid, Enter/Space act on
+  // the focused cell, Escape cancels a selection. The cursor only becomes
+  // visible once a key is used, so touch players never see it.
+  const [cursor, setCursor] = useState<CellIndex>(4)
+  const [kbActive, setKbActive] = useState(false)
+  const stateRef = useRef({ state, interactive, keyboardEnabled })
+  stateRef.current = { state, interactive, keyboardEnabled }
+  const actionsRef = useRef({ onCellTap, onPieceTap, onEscape })
+  actionsRef.current = { onCellTap, onPieceTap, onEscape }
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const { state: s, interactive: canPlay, keyboardEnabled: kb } = stateRef.current
+      if (!kb) return
+      const target = e.target as HTMLElement | null
+      if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return
+
+      if (e.key === 'Escape') {
+        if (s.selected) {
+          e.preventDefault()
+          actionsRef.current.onEscape()
+        }
+        return
+      }
+      if (!canPlay) return
+
+      const moves: Record<string, [number, number]> = {
+        ArrowUp: [0, -1],
+        ArrowDown: [0, 1],
+        ArrowLeft: [-1, 0],
+        ArrowRight: [1, 0],
+      }
+      const delta = moves[e.key]
+      if (delta) {
+        e.preventDefault()
+        setKbActive(true)
+        setCursor((prev) => {
+          const col = Math.min(2, Math.max(0, (prev % 3) + delta[0]))
+          const row = Math.min(2, Math.max(0, Math.floor(prev / 3) + delta[1]))
+          return (row * 3 + col) as CellIndex
+        })
+        return
+      }
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        setKbActive(true)
+        setCursor((prev) => {
+          const occupant = s.board[prev] ?? null
+          const activePiece = expectedPiece(s.turn)
+          if (occupant !== null && occupant === activePiece) {
+            actionsRef.current.onPieceTap(occupant)
+          } else {
+            actionsRef.current.onCellTap(prev)
+          }
+          return prev
+        })
+      }
+    }
+    function onPointerDown() {
+      setKbActive(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('pointerdown', onPointerDown)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('pointerdown', onPointerDown)
+    }
+  }, [])
 
   // Track newly placed pieces for the pop-in animation.
   const [entered, setEntered] = useState<Set<PieceId>>(new Set())
@@ -78,11 +153,12 @@ export function Board({ state, onCellTap, onPieceTap }: BoardProps) {
                 : `Cell ${cell + 1}, empty`
             }
 
+            const isCursor = kbActive && interactive && cursor === cell
             return (
               <button
                 key={cell}
                 type="button"
-                className={`cell${isTarget ? ' cell--target' : ''}`}
+                className={`cell${isTarget ? ' cell--target' : ''}${isCursor ? ' cell--cursor' : ''}`}
                 disabled={!enabled}
                 aria-label={label}
                 onClick={() => {

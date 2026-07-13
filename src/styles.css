@@ -401,9 +401,81 @@ button {
     flex-direction: row;
     align-items: stretch;
   }
+}
 
-  .panel--p2 {
-    transform: rotate(180deg);
+/* ---------- layout modes ---------- */
+
+/* Face-to-face: the opposite player's panel is rotated 180°. */
+.game--face .panel--p2 {
+  transform: rotate(180deg);
+}
+
+/* Side-by-side: everything reads the same way up. */
+.game--side .panel--p2 {
+  transform: none;
+}
+
+.game--side .piece-num--p2 {
+  display: none;
+}
+
+.game--side .piece-num--p1 {
+  bottom: 4%;
+  right: 6%;
+}
+
+/* Wide screens (desktop, iPad landscape) in side-by-side mode: the two
+   player panels flank the board. */
+@media (min-width: 900px) {
+  .game--side {
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) auto minmax(240px, 1fr);
+    grid-template-rows: 1fr auto;
+    grid-template-areas:
+      'left board right'
+      'left controls right';
+    align-items: center;
+    column-gap: 18px;
+    max-width: 1240px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .game--side .panel--p2 {
+    grid-area: left;
+  }
+
+  .game--side .panel--p1 {
+    grid-area: right;
+  }
+
+  .game--side .game-mid {
+    grid-area: board;
+  }
+
+  .game--side .controls {
+    grid-area: controls;
+    padding-bottom: 10px;
+  }
+
+  .game--side .board-wrap {
+    width: min(74dvh, 560px);
+  }
+
+  .game--side .panel {
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .game--side .panel-score {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .game--side .panel-status {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
 }
 
@@ -420,8 +492,8 @@ button {
   transition: box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
-.panel--p2 {
-  transform: rotate(180deg);
+.panel--waiting {
+  opacity: 0.62;
 }
 
 .panel--active-x {
@@ -649,6 +721,13 @@ button {
   margin: 0 auto;
 }
 
+/* Tablets have room for a larger board. */
+@media (min-width: 700px) and (min-height: 900px) {
+  .board-wrap {
+    width: min(100%, 58dvh, 600px);
+  }
+}
+
 .board {
   position: relative;
   width: 100%;
@@ -690,6 +769,19 @@ button {
 .cell:disabled {
   cursor: default;
   opacity: 0.85;
+}
+
+/* Keyboard cursor (arrow keys + Enter). Distinct from :focus-visible so the
+   roving cursor reads clearly even without tabbing. */
+.cell--cursor {
+  outline: 3px solid var(--text);
+  outline-offset: -3px;
+  z-index: 2;
+}
+
+.cell--cursor:disabled {
+  outline-style: dashed;
+  opacity: 0.6;
 }
 
 .cell--target {
@@ -983,6 +1075,17 @@ button {
   text-transform: uppercase;
   color: var(--text);
   margin: 0;
+}
+
+.undo-approve {
+  width: 100%;
+  border-color: rgba(74, 222, 128, 0.5);
+}
+
+.undo-approve--done {
+  border-color: var(--good);
+  color: var(--good);
+  opacity: 1 !important;
 }
 
 .result-headline {

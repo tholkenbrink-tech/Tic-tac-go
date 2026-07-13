@@ -1,5 +1,6 @@
-import type { Prefs } from '../engine/persist.ts'
+import type { LayoutPref, Prefs } from '../engine/persist.ts'
 import type { ClockType, MatchFormat } from '../engine/types.ts'
+import { defaultLayout } from '../lib/device.ts'
 
 interface ConfigProps {
   prefs: Prefs
@@ -111,6 +112,38 @@ export function Config({ prefs, onChange, onBack, onStart }: ConfigProps) {
           {prefs.format === 'unlimited'
             ? 'Play on until you decide to stop.'
             : `First to ${{ best3: 2, best5: 3, best7: 4 }[prefs.format]} round wins takes the match.`}
+        </p>
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}>Table layout</h3>
+        <div className="seg" role="group" aria-label="Table layout">
+          {(
+            [
+              ['auto', 'Auto'],
+              ['faceToFace', 'Face-to-face'],
+              ['sideBySide', 'Side-by-side'],
+            ] as [LayoutPref, string][]
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={prefs.layout === value}
+              onClick={() => onChange({ layout: value })}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <p className="hint">
+          {prefs.layout === 'auto' &&
+            (defaultLayout() === 'faceToFace'
+              ? 'Auto on this device: face-to-face — lay it flat between you; the far panel is rotated for the opposite player.'
+              : 'Auto on this device: side-by-side — both panels face the same way for players sharing a screen.')}
+          {prefs.layout === 'faceToFace' &&
+            'Device lies flat between you; the far panel is rotated for the opposite player.'}
+          {prefs.layout === 'sideBySide' &&
+            'Both panels face the same way — for players sitting next to each other.'}
         </p>
       </div>
 

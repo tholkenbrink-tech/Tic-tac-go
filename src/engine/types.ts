@@ -81,9 +81,22 @@ export type MatchStatus =
   | 'roundComplete'
   | 'matchComplete'
 
+/** Snapshot taken before each successful placement/move, for undo. */
+export interface HistoryEntry {
+  board: Board
+  turn: number
+}
+
+/** A pending undo that both players must approve. */
+export interface UndoRequest {
+  approvals: Record<PlayerId, boolean>
+}
+
+export const MAX_UNDOS_PER_ROUND = 3
+
 export interface MatchState {
   /** Schema version for persistence. */
-  v: 1
+  v: 2
   players: Record<PlayerId, string>
   config: MatchConfig
   winsNeeded: number | null
@@ -103,6 +116,12 @@ export interface MatchState {
   clock: ClockState
   roundResult: RoundResult | null
   matchResult: MatchResult | null
+  /** Move history for the current round (most recent last). */
+  history: HistoryEntry[]
+  /** Undos consumed this round (max MAX_UNDOS_PER_ROUND). */
+  undosUsed: number
+  /** Pending undo approval, or null. Clocks are stopped while it is open. */
+  undoRequest: UndoRequest | null
 }
 
 export type MatchAction =
@@ -118,6 +137,9 @@ export type MatchAction =
   | { type: 'END_ROUND_MANUAL'; now: number }
   | { type: 'NEXT_ROUND' }
   | { type: 'END_MATCH' }
+  | { type: 'REQUEST_UNDO'; now: number }
+  | { type: 'APPROVE_UNDO'; player: PlayerId; now: number }
+  | { type: 'CANCEL_UNDO'; now: number }
 
 export const PIECE_ORDER: readonly PieceId[] = ['X1', 'O1', 'X2', 'O2', 'X3', 'O3']
 

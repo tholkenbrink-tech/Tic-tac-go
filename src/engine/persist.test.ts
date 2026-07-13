@@ -76,6 +76,24 @@ describe('match persistence', () => {
     clearSavedMatch()
     expect(loadMatch()).toBeNull()
   })
+
+  it('discards legacy v1 saves', () => {
+    localStorage.setItem('sttt.v1.match', JSON.stringify({ v: 1, anything: true }))
+    expect(loadMatch()).toBeNull()
+    expect(localStorage.getItem('sttt.v1.match')).toBeNull()
+  })
+
+  it('cancels a pending undo request on restore', () => {
+    let s = activeMatch()
+    s = matchReducer(s, { type: 'REQUEST_UNDO', now: T0 + 9_000 })
+    expect(s.undoRequest).not.toBeNull()
+    saveMatch(s, T0 + 10_000)
+    const restored = loadMatch()
+    expect(restored!.undoRequest).toBeNull()
+    expect(restored!.paused).toBe(true)
+    // History survives, so the undo can be re-requested after resuming.
+    expect(restored!.history.length).toBe(2)
+  })
 })
 
 describe('prefs persistence', () => {

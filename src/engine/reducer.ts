@@ -19,6 +19,7 @@ import {
   pieceCell,
   symbolOf,
 } from './rules.ts'
+import { MAX_UNDOS_PER_ROUND } from './types.ts'
 import type {
   MatchAction,
   MatchConfig,
@@ -47,7 +48,7 @@ export function createMatch(
   config: MatchConfig,
 ): MatchState {
   return {
-    v: 1,
+    v: 2,
     players: { p1: players.p1, p2: players.p2 },
     config,
     winsNeeded: winsNeededFor(config.format),
@@ -64,6 +65,9 @@ export function createMatch(
     clock: freshClock(config.clock),
     roundResult: null,
     matchResult: null,
+    history: [],
+    undosUsed: 0,
+    undoRequest: null,
   }
 }
 
@@ -92,6 +96,9 @@ function resetRound(state: MatchState): MatchState {
     selected: null,
     clock: freshClock(state.config.clock),
     roundResult: null,
+    history: [],
+    undosUsed: 0,
+    undoRequest: null,
   }
 }
 
@@ -107,6 +114,7 @@ function finishRound(state: MatchState, result: RoundResult): MatchState {
     paused: false,
     selected: null,
     roundResult: result,
+    undoRequest: null,
   }
 
   if (next.winsNeeded !== null && result.kind === 'win' && scores[result.winner] >= next.winsNeeded) {
@@ -144,7 +152,33 @@ function applyTimeout(state: MatchState, hit: TimeoutResolution): MatchState {
 
 /** True while board interactions are allowed. */
 function canAct(state: MatchState): boolean {
-  return state.status === 'playing' && !state.paused && state.roundResult === null
+  return (
+    state.status === 'playing' &&
+    !state.paused &&
+    state.roundResult === null &&
+    state.undoRequest === null
+  )
+}
+
+export function canRequestUndo(state: MatchState): boolean {
+  return canAct(state) && state.history.length > 0 && state.undosUsed < MAX_UNDOS_PER_ROUND
+}
+
+/** Revert the last move and restart the clocks. Turn timer resets in full. */
+function applyUndo(state: MatchState, now: number): MatchState {
+  const entry = state.history[state.history.length - 1]
+  if (!entry) return { ...state, undoRequest: null, clock: startClock(state.clock, now) }
+  return {
+    ...state,
+    board: [...entry.board],
+    turn: entry.turn,
+    phase: phaseForTurn(entry.turn),
+    selected: null,
+    history: state.history.slice(0, -1),
+    undosUsed: state.undosUsed + 1,
+    undoRequest: null,
+    clock: startClock(resetTurnTimer(state.clock, state.config.clock), now),
+  }
 }
 
 export function matchReducer(state: MatchState, action: MatchAction): MatchState {
@@ -190,6 +224,7 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
         turn,
         phase: phaseForTurn(turn),
         clock: resetTurnTimer(settled, state.config.clock),
+        history: [...state.history, { board: state.board, turn: state.turn }],
       }
     }
 
@@ -241,11 +276,12 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
         turn,
         selected: null,
         clock: resetTurnTimer(settled, state.config.clock),
+        history: [...state.history, { board: state.board, turn: state.turn }],
       }
     }
 
     case 'PAUSE': {
-      if (state.status !== 'playing' || state.paused) return state
+      if (state.status !== 'playing' || state.paused || state.undoRequest !== null) return state
       return {
         ...state,
         paused: true,
@@ -255,7 +291,7 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
     }
 
     case 'RESUME': {
-      if (state.status !== 'playing' || !state.paused) return state
+      if (state.status !== 'playing' || !state.paused || state.undoRequest !== null) return state
       return {
         ...state,
         paused: false,
@@ -290,6 +326,32 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
       }
     }
 
+    case 'REQUEST_UNDO': {
+      if (!canRequestUndo(state)) return state
+      return {
+        ...state,
+        selected: null,
+        undoRequest: { approvals: { p1: false, p2: false } },
+        clock: stopClock(state.clock, state.config.clock, activeSymbol(state), action.now),
+      }
+    }
+
+    case 'APPROVE_UNDO': {
+      if (state.status !== 'playing' || state.undoRequest === null) return state
+      const approvals = { ...state.undoRequest.approvals, [action.player]: true }
+      if (approvals.p1 && approvals.p2) return applyUndo(state, action.now)
+      return { ...state, undoRequest: { approvals } }
+    }
+
+    case 'CANCEL_UNDO': {
+      if (state.status !== 'playing' || state.undoRequest === null) return state
+      return {
+        ...state,
+        undoRequest: null,
+        clock: startClock(state.clock, action.now),
+      }
+    }
+
     case 'END_MATCH': {
       if (state.status === 'matchComplete') return state
       const { p1, p2 } = state.scores
@@ -299,6 +361,7 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
         status: 'matchComplete',
         paused: false,
         selected: null,
+        undoRequest: null,
         clock: { ...state.clock, runningSince: null },
         matchResult: {
           winner,

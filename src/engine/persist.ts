@@ -9,9 +9,14 @@ import { PIECE_ORDER } from './types.ts'
 import type { ClockType, MatchFormat, MatchState, PieceId } from './types.ts'
 
 export const STORAGE_KEYS = {
-  match: 'sttt.v1.match',
+  match: 'sttt.v2.match',
   prefs: 'sttt.v1.prefs',
 } as const
+
+/** Older match-save keys that are discarded on load. */
+const LEGACY_MATCH_KEYS = ['sttt.v1.match']
+
+export type LayoutPref = 'auto' | 'faceToFace' | 'sideBySide'
 
 export interface Prefs {
   v: 1
@@ -24,6 +29,7 @@ export interface Prefs {
   sound: boolean
   haptics: boolean
   tutorialDone: boolean
+  layout: LayoutPref
 }
 
 export const DEFAULT_PREFS: Prefs = {
@@ -37,6 +43,7 @@ export const DEFAULT_PREFS: Prefs = {
   sound: true,
   haptics: true,
   tutorialDone: false,
+  layout: 'auto',
 }
 
 type Storage_ = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
@@ -58,7 +65,7 @@ function isRecord(x: unknown): x is Record<string, unknown> {
 
 export function validateMatch(x: unknown): x is MatchState {
   if (!isRecord(x)) return false
-  if (x.v !== 1) return false
+  if (x.v !== 2) return false
   if (!isRecord(x.players) || typeof x.players.p1 !== 'string' || typeof x.players.p2 !== 'string')
     return false
   if (!isRecord(x.config) || !isRecord(x.config.clock)) return false
@@ -86,6 +93,12 @@ export function validateMatch(x: unknown): x is MatchState {
   const expectedPlaced = Math.min(turn, 6)
   if (x.status === 'playing' && x.roundResult == null && placed !== expectedPlaced) return false
   if (!isRecord(x.clock) || !isRecord(x.clock.duelMs)) return false
+  if (!Array.isArray(x.history)) return false
+  for (const entry of x.history) {
+    if (!isRecord(entry) || !Array.isArray(entry.board) || entry.board.length !== 9) return false
+    if (typeof entry.turn !== 'number') return false
+  }
+  if (typeof x.undosUsed !== 'number' || x.undosUsed < 0) return false
   return true
 }
 
@@ -117,6 +130,7 @@ export function loadMatch(): MatchState | null {
   const storage = safeStorage()
   if (!storage) return null
   try {
+    for (const key of LEGACY_MATCH_KEYS) storage.removeItem(key)
     const raw = storage.getItem(STORAGE_KEYS.match)
     if (!raw) return null
     const parsed: unknown = JSON.parse(raw)
@@ -132,6 +146,9 @@ export function loadMatch(): MatchState | null {
       ...parsed,
       selected: null,
       paused: parsed.status === 'playing' ? true : parsed.paused,
+      // A pending undo approval does not survive a reload — approvals are
+      // in-the-moment consent, so the request is simply cancelled.
+      undoRequest: null,
       clock: { ...parsed.clock, runningSince: null },
     }
   } catch {
@@ -165,6 +182,9 @@ export function loadPrefs(): Prefs {
       clockType: CLOCK_TYPES.includes(parsed.clockType as ClockType)
         ? (parsed.clockType as ClockType)
         : DEFAULT_PREFS.clockType,
+      layout: ['auto', 'faceToFace', 'sideBySide'].includes(parsed.layout as string)
+        ? (parsed.layout as LayoutPref)
+        : DEFAULT_PREFS.layout,
     }
   } catch {
     return DEFAULT_PREFS

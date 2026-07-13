@@ -33,7 +33,7 @@ export function PlayerPanel({ state, viewer, now }: PanelProps) {
   const activeClass = playing
     ? isMyTurn
       ? ` panel--active-${active.toLowerCase()}`
-      : ''
+      : ' panel--waiting'
     : ''
 
   const roundInfo =

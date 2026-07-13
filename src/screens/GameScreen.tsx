@@ -3,7 +3,8 @@ import { Board } from '../components/Board.tsx'
 import { ConfirmDialog } from '../components/ConfirmDialog.tsx'
 import { PlayerPanel } from '../components/PlayerPanel.tsx'
 import { Tutorial } from './Tutorial.tsx'
-import { symbolForPlayer } from '../engine/reducer.ts'
+import { canRequestUndo, symbolForPlayer } from '../engine/reducer.ts'
+import { MAX_UNDOS_PER_ROUND } from '../engine/types.ts'
 import type {
   CellIndex,
   MatchAction,
@@ -11,11 +12,14 @@ import type {
   PieceId,
   RoundResult,
 } from '../engine/types.ts'
+import type { LayoutMode } from '../lib/device.ts'
 
 interface GameScreenProps {
   state: MatchState
   now: number
+  layout: LayoutMode
   dispatch: (action: MatchAction) => void
+  onToggleLayout: () => void
   onExitToMenu: () => void
   onRematch: () => void
   onNewMatch: () => void
@@ -76,7 +80,9 @@ function Confetti() {
 export function GameScreen({
   state,
   now,
+  layout,
   dispatch,
+  onToggleLayout,
   onExitToMenu,
   onRematch,
   onNewMatch,
@@ -176,13 +182,18 @@ export function GameScreen({
 
   const nextRoundP1Sym = state.p1Symbol === 'X' ? 'O' : 'X'
 
+  const undosLeft = MAX_UNDOS_PER_ROUND - state.undosUsed
+  const overlayOpen = menuOpen || rulesOpen || confirm !== null
+
   return (
-    <div className="game">
+    <div className={`game game--${layout === 'sideBySide' ? 'side' : 'face'}`}>
       <PlayerPanel state={state} viewer="p2" now={now} />
 
       <div className="game-mid">
         <Board
           state={state}
+          keyboardEnabled={!overlayOpen}
+          onEscape={() => dispatch({ type: 'DESELECT' })}
           onCellTap={(cell: CellIndex) => {
             if (state.phase === 'placement') dispatch({ type: 'PLACE', cell, now: Date.now() })
             else if (state.selected) dispatch({ type: 'MOVE', cell, now: Date.now() })
@@ -209,6 +220,17 @@ export function GameScreen({
             }}
           >
             {state.paused ? '▶ Resume' : '⏸ Pause'}
+          </button>
+        )}
+        {playing && (
+          <button
+            type="button"
+            className="ctl"
+            disabled={!canRequestUndo(state)}
+            aria-label={`Undo last move, ${undosLeft} of ${MAX_UNDOS_PER_ROUND} left this round`}
+            onClick={() => dispatch({ type: 'REQUEST_UNDO', now: Date.now() })}
+          >
+            ↶ Undo ({undosLeft})
           </button>
         )}
         <button type="button" className="ctl" onClick={openMenu}>
@@ -275,13 +297,57 @@ export function GameScreen({
         </div>
       )}
 
+      {/* Undo approval — both players must agree; clocks are already stopped. */}
+      {playing && state.undoRequest && !menuOpen && !rulesOpen && confirm === null && (
+        <div className="overlay" role="dialog" aria-modal="true" aria-label="Undo approval">
+          <div className="overlay-card">
+            <div className={layout === 'faceToFace' ? 'flip' : ''}>
+              <button
+                type="button"
+                className={`btn undo-approve${state.undoRequest.approvals.p2 ? ' undo-approve--done' : ''}`}
+                disabled={state.undoRequest.approvals.p2}
+                onClick={() => dispatch({ type: 'APPROVE_UNDO', player: 'p2', now: Date.now() })}
+              >
+                {state.undoRequest.approvals.p2
+                  ? `✓ ${state.players.p2} approved`
+                  : `${state.players.p2}: approve undo`}
+              </button>
+            </div>
+            <h2>↶ Undo last move?</h2>
+            <p className="hint" style={{ fontSize: 15 }}>
+              Both players must approve. {undosLeft} of {MAX_UNDOS_PER_ROUND} undos left this
+              round. Clocks are stopped while you decide.
+            </p>
+            <button
+              type="button"
+              className={`btn undo-approve${state.undoRequest.approvals.p1 ? ' undo-approve--done' : ''}`}
+              disabled={state.undoRequest.approvals.p1}
+              onClick={() => dispatch({ type: 'APPROVE_UNDO', player: 'p1', now: Date.now() })}
+            >
+              {state.undoRequest.approvals.p1
+                ? `✓ ${state.players.p1} approved`
+                : `${state.players.p1}: approve undo`}
+            </button>
+            <button
+              type="button"
+              className="btn btn--ghost"
+              onClick={() => dispatch({ type: 'CANCEL_UNDO', now: Date.now() })}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Pause overlay */}
       {playing && state.paused && !menuOpen && !rulesOpen && confirm === null && (
         <div className="overlay" role="dialog" aria-modal="true" aria-label="Game paused">
           <div className="overlay-card">
-            <p className="pause-flag flip" aria-hidden>
-              ⏸ Paused
-            </p>
+            {layout === 'faceToFace' && (
+              <p className="pause-flag flip" aria-hidden>
+                ⏸ Paused
+              </p>
+            )}
             <button
               type="button"
               className="btn btn--primary"
@@ -309,6 +375,9 @@ export function GameScreen({
               </button>
               <button type="button" className="btn" onClick={() => setRulesOpen(true)}>
                 Show rules
+              </button>
+              <button type="button" className="btn" onClick={onToggleLayout}>
+                Layout: {layout === 'faceToFace' ? 'Face-to-face' : 'Side-by-side'} — switch
               </button>
               {(playing || state.status === 'ready') && (
                 <button type="button" className="btn" onClick={() => setConfirm('restart')}>

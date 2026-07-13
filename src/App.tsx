@@ -17,6 +17,7 @@ import {
 import type { MatchAction, MatchConfig, MatchState } from './engine/types.ts'
 import { primeAudio, setSoundEnabled, sfx } from './lib/sound.ts'
 import { haptics, setHapticsEnabled } from './lib/haptics.ts'
+import { resolveLayout } from './lib/device.ts'
 
 type Screen = 'welcome' | 'setup' | 'config' | 'game'
 
@@ -139,6 +140,11 @@ export default function App() {
       haptics.move()
       return
     }
+    if (prev.undosUsed < match.undosUsed) {
+      sfx.undo()
+      haptics.move()
+      return
+    }
     if (match.selected !== null && prev.selected === null) {
       sfx.select()
       haptics.tap()
@@ -237,6 +243,12 @@ export default function App() {
         <GameScreen
           state={match}
           now={now}
+          layout={resolveLayout(prefs.layout)}
+          onToggleLayout={() =>
+            updatePrefs({
+              layout: resolveLayout(prefs.layout) === 'faceToFace' ? 'sideBySide' : 'faceToFace',
+            })
+          }
           dispatch={dispatch}
           onExitToMenu={exitToMenu}
           onRematch={rematch}

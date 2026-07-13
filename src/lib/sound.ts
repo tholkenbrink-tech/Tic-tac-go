@@ -93,4 +93,11 @@ export const sfx = {
     }),
   tick: () => guarded(() => blip(880, 0, 0.04, 'sine', 0.08)),
   pause: () => guarded(() => blip(400, 0, 0.08, 'sine', 0.1)),
+  undo: () =>
+    guarded(() => {
+      // A descending "rewind" figure.
+      blip(700, 0, 0.06, 'triangle', 0.12)
+      blip(520, 0.06, 0.06, 'triangle', 0.12)
+      blip(390, 0.12, 0.1, 'triangle', 0.12)
+    }),
 }

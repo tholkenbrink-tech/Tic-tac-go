@@ -79,6 +79,57 @@ describe('full match integration', () => {
     expect(await screen.findByRole('dialog', { name: /round ready/i })).toBeInTheDocument()
   })
 
+  it('supports keyboard play: arrow keys move the cursor, Enter places', async () => {
+    savePrefs({ ...DEFAULT_PREFS, p1Name: 'Ada', p2Name: 'Grace', tutorialDone: true })
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /quick play/i }))
+    await user.click(await screen.findByRole('button', { name: /^start round$/i }))
+
+    // Cursor starts on the center cell (5); Enter places X1 there.
+    await user.keyboard('{Enter}')
+    expect(screen.getByRole('button', { name: /cell 5, occupied by X1/i })).toBeInTheDocument()
+
+    // Arrow up to cell 2, Enter places O1. Left twice clamps at the edge (cell 1).
+    await user.keyboard('{ArrowUp}{Enter}')
+    expect(screen.getByRole('button', { name: /cell 2, occupied by O1/i })).toBeInTheDocument()
+    await user.keyboard('{ArrowLeft}{ArrowLeft}{Enter}')
+    expect(screen.getByRole('button', { name: /cell 1, occupied by X2/i })).toBeInTheDocument()
+  })
+
+  it('undoes the last move only after both players approve, max three per round', async () => {
+    savePrefs({ ...DEFAULT_PREFS, p1Name: 'Ada', p2Name: 'Grace', tutorialDone: true })
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /quick play/i }))
+    await user.click(await screen.findByRole('button', { name: /^start round$/i }))
+    await user.click(screen.getByRole('button', { name: /place x1 on cell 1$/i }))
+
+    await user.click(screen.getByRole('button', { name: /undo last move, 3 of 3 left/i }))
+    const dialog = await screen.findByRole('dialog', { name: /undo approval/i })
+
+    // One approval is not enough (board is inert while the dialog is open).
+    await user.click(within(dialog).getByRole('button', { name: /Ada: approve undo/i }))
+    expect(screen.getByRole('button', { name: /^cell 1, x1$/i })).toBeInTheDocument()
+
+    // Second approval reverts the placement.
+    await user.click(within(dialog).getByRole('button', { name: /Grace: approve undo/i }))
+    expect(screen.queryByRole('dialog', { name: /undo approval/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /place x1 on cell 1$/i })).toBeInTheDocument()
+
+    // Budget went down; with no move to revert the control is disabled.
+    const undoBtn = screen.getByRole('button', { name: /undo last move, 2 of 3 left/i })
+    expect(undoBtn).toBeDisabled()
+
+    // Cancelling costs nothing.
+    await user.click(screen.getByRole('button', { name: /place x1 on cell 1$/i }))
+    await user.click(screen.getByRole('button', { name: /undo last move, 2 of 3 left/i }))
+    const dialog2 = await screen.findByRole('dialog', { name: /undo approval/i })
+    await user.click(within(dialog2).getByRole('button', { name: /^cancel$/i }))
+    expect(screen.getByRole('button', { name: /cell 1, occupied by X1/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /undo last move, 2 of 3 left/i })).toBeEnabled()
+  })
+
   it('restores a saved in-progress match paused', async () => {
     savePrefs({ ...DEFAULT_PREFS, p1Name: 'Ada', p2Name: 'Grace', tutorialDone: true })
     let m = createMatch(

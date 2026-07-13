@@ -42,6 +42,16 @@ Any horizontal, vertical, or diagonal line of your three pieces wins the round.
   swap symbols. Restarting a round resets board and clocks without swapping or
   scoring.
 
+### Undo
+
+Either player can request an undo of the last move while a round is running.
+**Both players must approve** the request (in face-to-face layout the opposite
+player gets a rotated approval button); cancelling costs nothing. A maximum of
+**3 undos per round** applies, and the budget resets every round. All clocks
+stop while the approval dialog is open; after an undo the turn timer resets in
+full for the replayed turn, while duel/shared time already spent stays spent.
+A pending approval does not survive a reload — it is simply cancelled.
+
 ### Clocks
 
 Clock type and turn limit are independent settings:
@@ -59,6 +69,34 @@ with ties broken in the order turn limit → duel clock → shared clock. Clocks
 are computed from timestamps, not tick counters, so they stay accurate under
 slow rendering; below ten seconds they display tenths and below five they pulse
 red.
+
+## Layouts and devices
+
+Two table layouts are available, selectable in match settings and switchable
+mid-game from the menu:
+
+- **Face-to-face** — the device lies flat between the players; the far panel
+  and the duplicate piece-number badges are rotated 180° so the opposite
+  player reads everything right-side up. Default on phones and iPads.
+- **Side-by-side** — everything reads the same way up, for players sitting
+  next to each other. Default on desktop; on wide screens the two player
+  panels flank the board.
+
+In every layout the active player's panel glows and pulses in their symbol's
+color while the waiting player's panel dims, so it is always obvious whose
+turn it is — in addition to the explicit "PLACE X2 / MOVE O3" banner on both
+panels.
+
+### Desktop
+
+The game is fully mouse- and keyboard-playable, and installable as a desktop
+app via the browser's PWA install prompt (Chrome/Edge "Install app"):
+
+- **Arrow keys** move a cursor across the board (appears on first key press)
+- **Enter / Space** places the expected piece, or selects/moves during the
+  movement phase
+- **Escape** cancels a selection
+- **Tab** reaches every control for full screen-reader/keyboard access
 
 ## Local setup
 
@@ -129,9 +167,9 @@ display, portrait, dark theme colors, maskable icon included).
 
 Everything is stored in `localStorage` under versioned keys:
 
-- `sttt.v1.prefs` — player names, clock/format/sound/haptics preferences, and
-  tutorial completion. Prefilled on the next visit.
-- `sttt.v1.match` — the active match, saved after every meaningful action and
+- `sttt.v1.prefs` — player names, clock/format/layout/sound/haptics
+  preferences, and tutorial completion. Prefilled on the next visit.
+- `sttt.v2.match` — the active match, saved after every meaningful action and
   on page hide. A reopened match always restores **paused** with clocks
   stopped (settled to the moment of the save). Saves that fail validation —
   unknown schema version, corrupted JSON, impossible board states — are
@@ -162,6 +200,10 @@ are rejected inside the reducer, so no UI bug can corrupt a game.
 
 ## Product decisions
 
+- "Desktop app" means the installable PWA with full keyboard support — the
+  game is entirely client-side, so no Electron wrapper is needed.
+- Undo approval is by trust (two on-screen buttons); the app cannot verify
+  which human tapped which button on a shared device.
 - Reopening the app with an unfinished match resumes it directly (paused)
   rather than showing the menu; abandoning it via *Return to menu* discards it
   after confirmation.
