@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import { GameScreen } from './screens/GameScreen.tsx'
+import { SettingsSheet } from './components/SettingsSheet.tsx'
 import { Config } from './screens/Config.tsx'
 import { Setup } from './screens/Setup.tsx'
 import { Tutorial } from './screens/Tutorial.tsx'
@@ -42,6 +43,7 @@ export default function App() {
   const [match, dispatch] = useReducer(shellReducer, null, () => loadMatch())
   const [screen, setScreen] = useState<Screen>(() => (loadMatch() ? 'game' : 'welcome'))
   const [tutorialOpen, setTutorialOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [now, setNow] = useState(() => Date.now())
 
   const updatePrefs = useCallback((patch: Partial<Prefs>) => {
@@ -225,6 +227,7 @@ export default function App() {
             if (savedNames) startMatch(savedNames.p1, savedNames.p2)
           }}
           onHowToPlay={() => setTutorialOpen(true)}
+          onOpenSettings={() => setSettingsOpen(true)}
         />
       )}
 
@@ -246,6 +249,7 @@ export default function App() {
           onChange={updatePrefs}
           onBack={() => setScreen('setup')}
           onStart={() => startMatch(prefs.p1Name, prefs.p2Name)}
+          onOpenSettings={() => setSettingsOpen(true)}
         />
       )}
 
@@ -268,6 +272,10 @@ export default function App() {
             setScreen('setup')
           }}
         />
+      )}
+
+      {settingsOpen && (
+        <SettingsSheet prefs={prefs} onChange={updatePrefs} onClose={() => setSettingsOpen(false)} />
       )}
 
       {tutorialOpen && (

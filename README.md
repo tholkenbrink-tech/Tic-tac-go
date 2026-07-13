@@ -75,8 +75,14 @@ red.
 
 ## Layouts and devices
 
-Two table layouts are available, selectable in match settings and switchable
-mid-game from the menu:
+Global app settings — sound effects, haptic feedback, and the table layout —
+live behind the ⚙ button on the welcome and match-settings screens (they are
+device preferences, not per-match choices). The match-settings screen itself
+only configures the match: clock and format, with a sticky "Start match"
+button that is always visible without scrolling.
+
+Two table layouts are available (⚙ settings, also switchable mid-game from
+the menu):
 
 - **Face-to-face** — the device lies flat between the players; the far panel
   and the duplicate piece-number badges are rotated 180° so the opposite

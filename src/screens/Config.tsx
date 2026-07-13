@@ -1,22 +1,12 @@
-import type { LayoutPref, Prefs } from '../engine/persist.ts'
+import type { Prefs } from '../engine/persist.ts'
 import type { ClockType, MatchFormat } from '../engine/types.ts'
-import { defaultLayout, isTablet, isTouchDevice } from '../lib/device.ts'
-
-function autoLayoutHint(): string {
-  if (!isTouchDevice())
-    return 'Auto on this device: side-by-side — both panels face the same way for players sharing a screen.'
-  if (isTablet())
-    return 'Auto on this device: face-to-face — lay it flat between you; the far panel is rotated for the opposite player.'
-  return defaultLayout() === 'faceToFace'
-    ? 'Auto on this phone: face-to-face when upright, side-by-side when rotated to landscape.'
-    : 'Auto on this phone: side-by-side in landscape, face-to-face when upright.'
-}
 
 interface ConfigProps {
   prefs: Prefs
   onChange: (patch: Partial<Prefs>) => void
   onBack: () => void
   onStart: () => void
+  onOpenSettings: () => void
 }
 
 const CLOCK_EXPLAIN: Record<ClockType, string> = {
@@ -32,10 +22,20 @@ const FORMATS: { value: MatchFormat; label: string }[] = [
   { value: 'unlimited', label: '∞' },
 ]
 
-export function Config({ prefs, onChange, onBack, onStart }: ConfigProps) {
+export function Config({ prefs, onChange, onBack, onStart, onOpenSettings }: ConfigProps) {
   return (
-    <main className="screen">
-      <h2>Match settings</h2>
+    <main className="screen screen--config">
+      <div className="screen-head">
+        <h2>Match settings</h2>
+        <button
+          type="button"
+          className="icon-btn"
+          aria-label="Settings"
+          onClick={onOpenSettings}
+        >
+          ⚙
+        </button>
+      </div>
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}>Clock</h3>
@@ -137,63 +137,11 @@ export function Config({ prefs, onChange, onBack, onStart }: ConfigProps) {
         </p>
       </div>
 
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>Table layout</h3>
-        <div className="seg" role="group" aria-label="Table layout">
-          {(
-            [
-              ['auto', 'Auto'],
-              ['faceToFace', 'Face-to-face'],
-              ['sideBySide', 'Side-by-side'],
-            ] as [LayoutPref, string][]
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={prefs.layout === value}
-              onClick={() => onChange({ layout: value })}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <p className="hint">
-          {prefs.layout === 'auto' && autoLayoutHint()}
-          {prefs.layout === 'faceToFace' &&
-            'Device lies flat between you; the far panel is rotated for the opposite player.'}
-          {prefs.layout === 'sideBySide' &&
-            'Both panels face the same way — for players sitting next to each other.'}
-        </p>
+      <div className="start-bar">
+        <button type="button" className="btn btn--primary" onClick={onStart}>
+          Start match
+        </button>
       </div>
-
-      <div className="card">
-        <div className="toggle-row">
-          <span style={{ fontWeight: 700 }}>Sound effects</span>
-          <button
-            type="button"
-            role="switch"
-            className="switch"
-            aria-checked={prefs.sound}
-            aria-label="Sound effects"
-            onClick={() => onChange({ sound: !prefs.sound })}
-          />
-        </div>
-        <div className="toggle-row">
-          <span style={{ fontWeight: 700 }}>Haptic feedback</span>
-          <button
-            type="button"
-            role="switch"
-            className="switch"
-            aria-checked={prefs.haptics}
-            aria-label="Haptic feedback"
-            onClick={() => onChange({ haptics: !prefs.haptics })}
-          />
-        </div>
-      </div>
-
-      <button type="button" className="btn btn--primary" onClick={onStart}>
-        Start match
-      </button>
       <button type="button" className="btn btn--ghost" onClick={onBack}>
         Back
       </button>

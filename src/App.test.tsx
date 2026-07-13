@@ -88,6 +88,29 @@ describe('full match integration', () => {
     expect(within(ready).getByText('Player 2')).toBeInTheDocument()
   })
 
+  it('exposes global settings (sound, haptics, layout) behind the gear button', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /settings/i }))
+    const sheet = await screen.findByRole('dialog', { name: /settings/i })
+    // Sound and haptics live here now, not in match configuration.
+    await user.click(within(sheet).getByRole('switch', { name: /sound effects/i }))
+    expect(within(sheet).getByRole('switch', { name: /sound effects/i })).toHaveAttribute(
+      'aria-checked',
+      'false',
+    )
+    expect(within(sheet).getByRole('button', { name: 'Face-to-face' })).toBeInTheDocument()
+    await user.click(within(sheet).getByRole('button', { name: /done/i }))
+
+    // The match configuration screen no longer contains them.
+    await user.click(screen.getByRole('button', { name: /new match/i }))
+    await user.click(screen.getByRole('button', { name: /continue/i }))
+    expect(screen.queryByRole('switch', { name: /sound effects/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /start match/i })).toBeInTheDocument()
+    // The gear is available here too.
+    expect(screen.getByRole('button', { name: /settings/i })).toBeInTheDocument()
+  })
+
   it('skips setup via quick play when names are saved', async () => {
     savePrefs({ ...DEFAULT_PREFS, p1Name: 'Ada', p2Name: 'Grace', tutorialDone: true })
     const user = userEvent.setup()

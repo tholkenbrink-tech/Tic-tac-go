@@ -5,11 +5,26 @@ interface WelcomeProps {
   onNewMatch: () => void
   onQuickPlay: () => void
   onHowToPlay: () => void
+  onOpenSettings: () => void
 }
 
-export function Welcome({ savedNames, onNewMatch, onQuickPlay, onHowToPlay }: WelcomeProps) {
+export function Welcome({
+  savedNames,
+  onNewMatch,
+  onQuickPlay,
+  onHowToPlay,
+  onOpenSettings,
+}: WelcomeProps) {
   return (
     <main className="screen screen--center">
+      <button
+        type="button"
+        className="icon-btn icon-btn--corner"
+        aria-label="Settings"
+        onClick={onOpenSettings}
+      >
+        ⚙
+      </button>
       <div className="brand">
         <div className="brand-logo" aria-hidden>
           <PieceGlyph symbol="X" size="56px" />
