@@ -180,7 +180,7 @@ export function GameScreen({
     return result.kind === 'win' ? state.players[result.winner] : null
   }
 
-  const nextRoundP1Sym = state.p1Symbol === 'X' ? 'O' : 'X'
+  const nextStarter = state.startingSymbol === 'X' ? 'O' : 'X'
 
   const undosLeft = MAX_UNDOS_PER_ROUND - state.undosUsed
   const overlayOpen = menuOpen || rulesOpen || confirm !== null
@@ -271,7 +271,8 @@ export function GameScreen({
               ))}
             </div>
             <p className="assign-note">
-              {state.players[state.p1Symbol === 'X' ? 'p1' : 'p2']} plays X and starts.
+              {state.players[state.startingSymbol === 'X' ? 'p1' : 'p2']} (
+              {state.startingSymbol}) starts this round.
             </p>
             <button
               type="button"
@@ -459,8 +460,8 @@ export function GameScreen({
               <span style={{ fontSize: 15 }}>{state.players.p2}</span>
             </div>
             <p className="assign-note">
-              Next round: {state.players[nextRoundP1Sym === 'X' ? 'p1' : 'p2']} plays X ·{' '}
-              {state.players[nextRoundP1Sym === 'X' ? 'p2' : 'p1']} plays O
+              Next round: {state.players[nextStarter === 'X' ? 'p1' : 'p2']} ({nextStarter})
+              starts
             </p>
             <button
               type="button"

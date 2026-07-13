@@ -70,8 +70,8 @@ export function Setup({ initialP1, initialP2, onBack, onContinue }: SetupProps) 
           {error}
         </p>
         <p className="hint">
-          Player 1 starts as X in round 1. Symbols swap every round. Names lock once the
-          match starts.
+          Player 1 always plays X, Player 2 always plays O. The player who starts
+          alternates each round. Names lock once the match starts.
         </p>
         <button type="submit" className="btn btn--primary">
           Continue

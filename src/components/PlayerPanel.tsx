@@ -23,8 +23,8 @@ export function PlayerPanel({ state, viewer, now }: PanelProps) {
   const activePlayer = playerForSymbol(state, active)
   const isMyTurn = activePlayer === viewer
   const playing = state.status === 'playing' && !state.paused && state.roundResult === null
-  const piece = expectedPiece(state.turn)
-  const nextPiece = followingPiece(state.turn)
+  const piece = expectedPiece(state.turn, state.startingSymbol)
+  const nextPiece = followingPiece(state.turn, state.startingSymbol)
   const verb = state.phase === 'placement' ? 'PLACE' : 'MOVE'
 
   const clock = state.config.clock

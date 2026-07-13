@@ -143,7 +143,7 @@ export default function App() {
       return
     }
     if (match.turn > prev.turn && prev.roundResult === null) {
-      const moved = expectedPiece(prev.turn)
+      const moved = expectedPiece(prev.turn, prev.startingSymbol)
       const sym = moved[0] === 'X' ? 'X' : 'O'
       if (prev.phase === 'placement') sfx.place(sym)
       else sfx.move(sym)
@@ -195,7 +195,7 @@ export default function App() {
     if (match.status === 'ready') announcement = `Round ${match.roundNumber} ready.`
     else if (match.status === 'playing' && match.paused) announcement = 'Game paused.'
     else if (match.status === 'playing') {
-      const piece = expectedPiece(match.turn)
+      const piece = expectedPiece(match.turn, match.startingSymbol)
       const player = match.players[match.p1Symbol === activeSymbol(match) ? 'p1' : 'p2']
       announcement = `${player}: ${match.phase === 'placement' ? 'place' : 'move'} ${piece}.`
     } else if (match.roundResult) {

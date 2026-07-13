@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { expectedPiece, pieceCell, symbolOf, validDestinations } from '../engine/rules.ts'
 import type { CellIndex, MatchState, PieceId } from '../engine/types.ts'
-import { PIECE_ORDER } from '../engine/types.ts'
+import { ALL_PIECES } from '../engine/types.ts'
 import { PieceGlyph } from './PieceGlyph.tsx'
 
 interface BoardProps {
@@ -26,10 +26,10 @@ export function Board({ state, onCellTap, onPieceTap, keyboardEnabled, onEscape 
     !state.paused &&
     state.roundResult === null &&
     state.undoRequest === null
-  const active = interactive ? expectedPiece(state.turn) : null
+  const active = interactive ? expectedPiece(state.turn, state.startingSymbol) : null
   const targets = new Set<CellIndex>(
     interactive && state.phase === 'movement' && state.selected
-      ? validDestinations(state.board, state.turn, state.selected)
+      ? validDestinations(state.board, state.turn, state.selected, state.startingSymbol)
       : [],
   )
   const winLine = state.roundResult?.kind === 'win' ? state.roundResult.line : null
@@ -87,7 +87,7 @@ export function Board({ state, onCellTap, onPieceTap, keyboardEnabled, onEscape 
         setKbActive(true)
         setCursor((prev) => {
           const occupant = s.board[prev] ?? null
-          const activePiece = expectedPiece(s.turn)
+          const activePiece = expectedPiece(s.turn, s.startingSymbol)
           if (occupant !== null && occupant === activePiece) {
             actionsRef.current.onPieceTap(occupant)
           } else {
@@ -110,12 +110,12 @@ export function Board({ state, onCellTap, onPieceTap, keyboardEnabled, onEscape 
 
   // Track newly placed pieces for the pop-in animation.
   const [entered, setEntered] = useState<Set<PieceId>>(new Set())
-  const onBoard = PIECE_ORDER.filter((p) => pieceCell(state.board, p) !== null)
+  const onBoard = ALL_PIECES.filter((p) => pieceCell(state.board, p) !== null)
   useEffect(() => {
     setEntered((prev) => {
       const next = new Set(prev)
       for (const p of onBoard) next.add(p)
-      for (const p of PIECE_ORDER) if (!onBoard.includes(p)) next.delete(p)
+      for (const p of ALL_PIECES) if (!onBoard.includes(p)) next.delete(p)
       return next.size === prev.size && [...next].every((p) => prev.has(p)) ? prev : next
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps

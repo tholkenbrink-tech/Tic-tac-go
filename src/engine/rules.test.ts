@@ -20,19 +20,30 @@ function boardWith(entries: Partial<Record<CellIndex, PieceId>>): Board {
 }
 
 describe('expectedPiece / followingPiece', () => {
-  it('follows X1 O1 X2 O2 X3 O3 during placement', () => {
-    expect([0, 1, 2, 3, 4, 5].map(expectedPiece)).toEqual([
+  it('follows X1 O1 X2 O2 X3 O3 when X starts', () => {
+    expect([0, 1, 2, 3, 4, 5].map((t) => expectedPiece(t, 'X'))).toEqual([
       'X1',
       'O1',
       'X2',
       'O2',
       'X3',
       'O3',
+    ])
+  })
+
+  it('follows O1 X1 O2 X2 O3 X3 when O starts', () => {
+    expect([0, 1, 2, 3, 4, 5].map((t) => expectedPiece(t, 'O'))).toEqual([
+      'O1',
+      'X1',
+      'O2',
+      'X2',
+      'O3',
+      'X3',
     ])
   })
 
   it('repeats the same order forever during movement', () => {
-    expect([6, 7, 8, 9, 10, 11, 12].map(expectedPiece)).toEqual([
+    expect([6, 7, 8, 9, 10, 11, 12].map((t) => expectedPiece(t, 'X'))).toEqual([
       'X1',
       'O1',
       'X2',
@@ -41,12 +52,15 @@ describe('expectedPiece / followingPiece', () => {
       'O3',
       'X1',
     ])
+    expect(expectedPiece(6, 'O')).toBe('O1')
   })
 
   it('reports the following piece', () => {
-    expect(followingPiece(0)).toBe('O1')
-    expect(followingPiece(5)).toBe('X1')
-    expect(followingPiece(11)).toBe('X1')
+    expect(followingPiece(0, 'X')).toBe('O1')
+    expect(followingPiece(5, 'X')).toBe('X1')
+    expect(followingPiece(11, 'X')).toBe('X1')
+    expect(followingPiece(0, 'O')).toBe('X1')
+    expect(followingPiece(5, 'O')).toBe('O1')
   })
 })
 
@@ -77,31 +91,35 @@ describe('isMoveValid / validDestinations', () => {
   const board = boardWith({ 0: 'X1', 1: 'O1', 2: 'X2', 3: 'O2', 4: 'X3', 5: 'O3' })
 
   it('accepts the expected piece moving to an empty cell, adjacent or not', () => {
-    expect(isMoveValid(board, 6, 'X1', 6)).toBe(true)
-    expect(isMoveValid(board, 6, 'X1', 8)).toBe(true)
+    expect(isMoveValid(board, 6, 'X1', 6, 'X')).toBe(true)
+    expect(isMoveValid(board, 6, 'X1', 8, 'X')).toBe(true)
+    // When O started the round, O1 is the piece expected at turn 6.
+    expect(isMoveValid(board, 6, 'O1', 6, 'O')).toBe(true)
   })
 
   it('rejects moving the wrong piece', () => {
-    expect(isMoveValid(board, 6, 'X2', 6)).toBe(false)
-    expect(isMoveValid(board, 7, 'X1', 6)).toBe(false)
+    expect(isMoveValid(board, 6, 'X2', 6, 'X')).toBe(false)
+    expect(isMoveValid(board, 7, 'X1', 6, 'X')).toBe(false)
+    expect(isMoveValid(board, 6, 'X1', 6, 'O')).toBe(false)
   })
 
   it('rejects moving onto an occupied cell', () => {
-    expect(isMoveValid(board, 6, 'X1', 1)).toBe(false)
+    expect(isMoveValid(board, 6, 'X1', 1, 'X')).toBe(false)
   })
 
   it('rejects staying in the same cell', () => {
-    expect(isMoveValid(board, 6, 'X1', 0)).toBe(false)
+    expect(isMoveValid(board, 6, 'X1', 0, 'X')).toBe(false)
   })
 
   it('rejects movement during placement phase', () => {
-    expect(isMoveValid(boardWith({ 0: 'X1' }), 1, 'X1', 5)).toBe(false)
+    expect(isMoveValid(boardWith({ 0: 'X1' }), 1, 'X1', 5, 'X')).toBe(false)
   })
 
   it('lists exactly the empty cells for the expected piece', () => {
-    expect(validDestinations(board, 6, 'X1')).toEqual([6, 7, 8])
-    expect(validDestinations(board, 6, 'O1')).toEqual([])
-    expect(validDestinations(board, 3, 'X1')).toEqual([])
+    expect(validDestinations(board, 6, 'X1', 'X')).toEqual([6, 7, 8])
+    expect(validDestinations(board, 6, 'O1', 'X')).toEqual([])
+    expect(validDestinations(board, 3, 'X1', 'X')).toEqual([])
+    expect(validDestinations(board, 6, 'O1', 'O')).toEqual([6, 7, 8])
   })
 })
 

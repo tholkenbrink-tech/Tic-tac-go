@@ -48,7 +48,7 @@ export function createMatch(
   config: MatchConfig,
 ): MatchState {
   return {
-    v: 2,
+    v: 3,
     players: { p1: players.p1, p2: players.p2 },
     config,
     winsNeeded: winsNeededFor(config.format),
@@ -56,6 +56,7 @@ export function createMatch(
     roundNumber: 1,
     roundsPlayed: 0,
     p1Symbol: 'X',
+    startingSymbol: 'X',
     status: 'ready',
     paused: false,
     board: emptyBoard(),
@@ -82,7 +83,7 @@ export function symbolForPlayer(state: MatchState, player: PlayerId): Symbol_ {
 
 /** Symbol whose turn it currently is. */
 export function activeSymbol(state: MatchState): Symbol_ {
-  return symbolOf(expectedPiece(state.turn))
+  return symbolOf(expectedPiece(state.turn, state.startingSymbol))
 }
 
 function resetRound(state: MatchState): MatchState {
@@ -199,7 +200,7 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
       if (hit) return applyTimeout(state, hit)
       if (!isPlacementValid(state.board, state.turn, action.cell)) return state
 
-      const piece = expectedPiece(state.turn)
+      const piece = expectedPiece(state.turn, state.startingSymbol)
       const board = [...state.board]
       board[action.cell] = piece
 
@@ -231,7 +232,7 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
     case 'SELECT': {
       if (!canAct(state)) return state
       if (state.phase !== 'movement') return state
-      if (action.piece !== expectedPiece(state.turn)) return state
+      if (action.piece !== expectedPiece(state.turn, state.startingSymbol)) return state
       if (pieceCell(state.board, action.piece) === null) return state
       return { ...state, selected: action.piece }
     }
@@ -247,7 +248,8 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
       if (hit) return applyTimeout(state, hit)
       const piece = state.selected
       if (piece === null) return state
-      if (!isMoveValid(state.board, state.turn, piece, action.cell)) return state
+      if (!isMoveValid(state.board, state.turn, piece, action.cell, state.startingSymbol))
+        return state
 
       const from = pieceCell(state.board, piece)
       const board = [...state.board]
@@ -322,7 +324,8 @@ export function matchReducer(state: MatchState, action: MatchAction): MatchState
       return {
         ...resetRound(state),
         roundNumber: state.roundNumber + 1,
-        p1Symbol: state.p1Symbol === 'X' ? 'O' : 'X',
+        // Colors are fixed for the whole match; the starter alternates.
+        startingSymbol: state.startingSymbol === 'X' ? 'O' : 'X',
       }
     }
 

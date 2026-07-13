@@ -50,7 +50,7 @@ const STEPS: { title: string; body: string; board: StepBoard }[] = [
   },
   {
     title: 'Place in strict order',
-    body: 'Take turns placing on empty cells in this exact order: X1, O1, X2, O2, X3, O3. X always goes first.',
+    body: 'Take turns placing on empty cells, starter first: piece 1, then 1, 2, 2, 3, 3. X starts round 1 — the starting player alternates each round.',
     board: {
       cells: [
         { symbol: 'X', num: 1 },

@@ -11,7 +11,7 @@ function cellButton(label: RegExp) {
 }
 
 describe('full match integration', () => {
-  it('configures a match, places, moves, wins, and swaps symbols next round', async () => {
+  it('configures a match, places, moves, wins, and alternates the starter next round', async () => {
     const user = userEvent.setup()
     render(<App />)
 
@@ -34,7 +34,7 @@ describe('full match integration', () => {
     // Ready screen for round 1: Ada plays X.
     const ready = await screen.findByRole('dialog', { name: /round ready/i })
     expect(within(ready).getByText(/round 1/i)).toBeInTheDocument()
-    expect(within(ready).getByText(/Ada plays X and starts/i)).toBeInTheDocument()
+    expect(within(ready).getByText(/Ada \(X\) starts this round/i)).toBeInTheDocument()
     await user.click(within(ready).getByRole('button', { name: /start round/i }))
 
     // Six placements with no winner: X on cells 0,1,5 / O on 3,6,7.
@@ -64,11 +64,14 @@ describe('full match integration', () => {
     expect(within(result).getByText(/Ada wins the round/i)).toBeInTheDocument()
     expect(within(result).getByText(/three in a row/i)).toBeInTheDocument()
 
-    // Next round: assignments must switch — Grace plays X.
+    // Next round: colors stay fixed, but Grace (O) takes the first turn.
     await user.click(within(result).getByRole('button', { name: /start round 2/i }))
     const ready2 = await screen.findByRole('dialog', { name: /round ready/i })
     expect(within(ready2).getByText(/round 2/i)).toBeInTheDocument()
-    expect(within(ready2).getByText(/Grace plays X and starts/i)).toBeInTheDocument()
+    expect(within(ready2).getByText(/Grace \(O\) starts this round/i)).toBeInTheDocument()
+    await user.click(within(ready2).getByRole('button', { name: /start round/i }))
+    // O1 is the first placement of round 2.
+    expect(screen.getByRole('button', { name: /place o1 on cell 1$/i })).toBeInTheDocument()
   }, 20_000)
 
   it('skips setup via quick play when names are saved', async () => {
