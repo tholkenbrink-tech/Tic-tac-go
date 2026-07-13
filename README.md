@@ -162,6 +162,48 @@ add client-side routes later, configure 404 → `/index.html` rewrites
 to `/index.html` with a 200 status). The service worker already uses
 `index.html` as its navigation fallback for offline use.
 
+## iOS app (Capacitor)
+
+The repo contains a native iOS app in `ios/` — a Capacitor shell that runs the
+exact same web build in a WKWebView. The game code stays 100% shared; the
+shell adds a real app icon, splash screen, and native haptics (UIKit impact/
+notification feedback — `navigator.vibrate` does not exist in WKWebView).
+
+Building and running requires a Mac with Xcode 15+ (iOS apps cannot be
+compiled elsewhere). Node steps work anywhere:
+
+```bash
+npm install
+npm run ios:sync   # builds the web app and copies it into ios/
+npm run ios:open   # opens the project in Xcode (macOS only)
+```
+
+In Xcode: select the `App` target → *Signing & Capabilities* → choose your
+team, then Run (⌘R) on a Simulator or a plugged-in iPhone.
+
+### Testing the iOS app
+
+- **Fastest (no Mac):** the PWA is the same code — open the deployed URL on an
+  iPhone and *Add to Home Screen*. Anything verified there is verified for the
+  shell too, except native haptics and the splash screen.
+- **Simulator:** `npm run ios:sync && npm run ios:open`, then ⌘R. A free
+  Apple ID is enough.
+- **Your own iPhone:** plug it in, select it as the run destination, and
+  enable *Developer Mode* on the phone (Settings → Privacy & Security). With a
+  free Apple ID the install expires after 7 days; re-run from Xcode to renew.
+- **Other people's iPhones (TestFlight):** requires the paid Apple Developer
+  Program ($99/yr). In Xcode: Product → Archive → Distribute → App Store
+  Connect, then add testers in the TestFlight tab. Testers install via the
+  TestFlight app from a link — no cables, updates roll out automatically.
+- **Automated tests:** all 91 Vitest tests and the Playwright flows exercise
+  the exact JavaScript that ships inside the shell, so the CI suite covers the
+  app's logic. Only the thin native layer (icon, splash, haptics bridge) needs
+  the manual Simulator/device check.
+
+After changing web code, re-run `npm run ios:sync` before building in Xcode —
+it refreshes the copied web assets. `npm run icons` also regenerates the iOS
+app icon and splash into the Xcode asset catalog.
+
 ## PWA / offline
 
 The build generates a Workbox service worker (`vite-plugin-pwa`, `generateSW`)

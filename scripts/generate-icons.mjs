@@ -5,11 +5,12 @@
  * Run: npm run icons  (outputs into public/)
  */
 import { deflateSync } from 'node:zlib'
-import { writeFileSync, mkdirSync } from 'node:fs'
+import { writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
-const outDir = join(dirname(dirname(fileURLToPath(import.meta.url))), 'public')
+const rootDir = dirname(dirname(fileURLToPath(import.meta.url)))
+const outDir = join(rootDir, 'public')
 mkdirSync(outDir, { recursive: true })
 
 // ---- minimal PNG encoder -------------------------------------------------
@@ -148,6 +149,49 @@ function drawIcon(size, inset) {
   return rgba
 }
 
+/** Splash screen: calm navy gradient with the two glyphs centered. */
+function drawSplash(size) {
+  const rgba = Buffer.alloc(size * size * 4)
+  const s = (v) => v * size
+  const glyphR = s(0.045)
+  const stroke = s(0.02)
+  const cy = 0.5
+  const cxX = 0.44
+  const cxO = 0.56
+  const aa = Math.max(1, size / 512)
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const g = y / size
+      let r = 10 + g * 5
+      let gr = 17 + g * 7
+      let b = 30 + g * 12
+
+      const dX = Math.min(
+        segmentDistance(x, y, s(cxX) - glyphR, s(cy) - glyphR, s(cxX) + glyphR, s(cy) + glyphR),
+        segmentDistance(x, y, s(cxX) + glyphR, s(cy) - glyphR, s(cxX) - glyphR, s(cy) + glyphR),
+      )
+      const xA = smooth(stroke + aa, stroke - aa, dX)
+      const dO = Math.abs(Math.hypot(x - s(cxO), y - s(cy)) - glyphR)
+      const oA = smooth(stroke + aa, stroke - aa, dO)
+
+      r = r * (1 - xA) + 34 * xA
+      gr = gr * (1 - xA) + 211 * xA
+      b = b * (1 - xA) + 238 * xA
+      r = r * (1 - oA) + 251 * oA
+      gr = gr * (1 - oA) + 146 * oA
+      b = b * (1 - oA) + 60 * oA
+
+      const i = (y * size + x) * 4
+      rgba[i] = Math.round(clamp01(r / 255) * 255)
+      rgba[i + 1] = Math.round(clamp01(gr / 255) * 255)
+      rgba[i + 2] = Math.round(clamp01(b / 255) * 255)
+      rgba[i + 3] = 255
+    }
+  }
+  return rgba
+}
+
 const targets = [
   ['icon-192.png', 192, 0],
   ['icon-512.png', 512, 0],
@@ -158,4 +202,18 @@ const targets = [
 for (const [name, size, inset] of targets) {
   writeFileSync(join(outDir, name), encodePng(size, size, drawIcon(size, inset)))
   console.log(`wrote public/${name}`)
+}
+
+// iOS asset catalog (only when the Capacitor iOS platform exists).
+const iosAssets = join(rootDir, 'ios', 'App', 'App', 'Assets.xcassets')
+if (existsSync(iosAssets)) {
+  const appIcon = join(iosAssets, 'AppIcon.appiconset', 'AppIcon-512@2x.png')
+  writeFileSync(appIcon, encodePng(1024, 1024, drawIcon(1024, 0)))
+  console.log('wrote ios AppIcon (1024x1024)')
+
+  const splash = encodePng(2732, 2732, drawSplash(2732))
+  for (const name of ['splash-2732x2732.png', 'splash-2732x2732-1.png', 'splash-2732x2732-2.png']) {
+    writeFileSync(join(iosAssets, 'Splash.imageset', name), splash)
+    console.log(`wrote ios ${name}`)
+  }
 }
