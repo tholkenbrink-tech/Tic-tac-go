@@ -185,7 +185,7 @@ export function GameScreen({
     return result.kind === 'win' ? state.players[result.winner] : null
   }
 
-  const nextStarter = state.startingSymbol === 'X' ? 'O' : 'X'
+  const nextXPlayer = state.p1Symbol === 'X' ? 'p2' : 'p1'
 
   const undosLeft = MAX_UNDOS_PER_ROUND - state.undosUsed
   const overlayOpen = menuOpen || rulesOpen || confirm !== null
@@ -286,12 +286,14 @@ export function GameScreen({
               {state.winsNeeded !== null && ` · first to ${state.winsNeeded}`}
             </p>
             <div className="ready-vs">
-              <span>
-                {state.players.p1} <span className={`sym sym--${p1Sym.toLowerCase()}`}>{p1Sym}</span>
+              <span className="tint-p1">
+                <span className="pc-text">{state.players.p1}</span>{' '}
+                <span className="sym">{p1Sym}</span>
               </span>
               <span className="vs">VS</span>
-              <span>
-                <span className={`sym sym--${p2Sym.toLowerCase()}`}>{p2Sym}</span> {state.players.p2}
+              <span className="tint-p2">
+                <span className="sym">{p2Sym}</span>{' '}
+                <span className="pc-text">{state.players.p2}</span>
               </span>
             </div>
             <div className="result-score" aria-label="Score">
@@ -308,8 +310,7 @@ export function GameScreen({
               ))}
             </div>
             <p className="assign-note">
-              {state.players[state.startingSymbol === 'X' ? 'p1' : 'p2']} (
-              {state.startingSymbol}) starts this round.
+              {state.players[state.p1Symbol === 'X' ? 'p1' : 'p2']} plays X and starts.
             </p>
             <button
               type="button"
@@ -450,7 +451,7 @@ export function GameScreen({
             {state.roundResult.kind === 'win' ? (
               <>
                 <p
-                  className={`result-headline result-headline--${state.roundResult.winnerSymbol.toLowerCase()}`}
+                  className={`result-headline result-headline--pc tint-${state.roundResult.winner}`}
                 >
                   {winnerName(state.roundResult)} wins the round!
                 </p>
@@ -472,8 +473,7 @@ export function GameScreen({
               <span style={{ fontSize: 15 }}>{state.players.p2}</span>
             </div>
             <p className="assign-note">
-              Next round: {state.players[nextStarter === 'X' ? 'p1' : 'p2']} ({nextStarter})
-              starts
+              Next round: {state.players[nextXPlayer]} plays X and starts
             </p>
             <button
               type="button"
@@ -501,7 +501,7 @@ export function GameScreen({
                     🏆 Match winner
                   </p>
                   <p
-                    className={`result-headline result-headline--${symbolForPlayer(state, state.matchResult.winner).toLowerCase()}`}
+                    className={`result-headline result-headline--pc tint-${state.matchResult.winner}`}
                   >
                     {state.players[state.matchResult.winner]}
                   </p>

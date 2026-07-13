@@ -28,6 +28,32 @@
   box-sizing: border-box;
 }
 
+/* ---------- player color tints ----------
+   Colors belong to the PLAYERS: Player 1 is cyan, Player 2 is coral, for the
+   whole match. Symbols swap between rounds, so X is cyan in round 1 and coral
+   in round 2 — every tinted element reads its color from these variables. */
+.tint-p1 {
+  --pc: var(--x);
+  --pc-deep: var(--x-deep);
+  --pc-glow: var(--x-glow);
+  --pc-soft: rgba(34, 211, 238, 0.12);
+  --pc-line: rgba(34, 211, 238, 0.42);
+  --pc-bg: rgba(34, 211, 238, 0.09);
+}
+
+.tint-p2 {
+  --pc: var(--o);
+  --pc-deep: var(--o-deep);
+  --pc-glow: var(--o-glow);
+  --pc-soft: rgba(251, 146, 60, 0.12);
+  --pc-line: rgba(251, 146, 60, 0.42);
+  --pc-bg: rgba(251, 146, 60, 0.09);
+}
+
+.pc-text {
+  color: var(--pc);
+}
+
 html,
 body,
 #root {
@@ -158,9 +184,14 @@ button {
 .field label {
   font-size: 14px;
   font-weight: 700;
-  color: var(--text-dim);
+  color: var(--pc, var(--text-dim));
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+.field.tint-p1 input,
+.field.tint-p2 input {
+  border-color: var(--pc-line);
 }
 
 .field input {
@@ -502,8 +533,9 @@ button {
 
 /* ---------- player panels ---------- */
 .panel {
-  background: var(--bg-raised);
-  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--pc-bg, transparent), var(--bg-raised) 78%),
+    var(--bg-raised);
+  border: 1px solid var(--pc-line, var(--line));
   border-radius: var(--radius);
   padding: 8px 12px;
   display: flex;
@@ -517,42 +549,23 @@ button {
   opacity: 0.62;
 }
 
-.panel--active-x {
-  border-color: rgba(34, 211, 238, 0.65);
+.panel--active {
+  border-color: var(--pc);
   box-shadow:
-    0 0 0 1px rgba(34, 211, 238, 0.35),
-    0 0 26px rgba(34, 211, 238, 0.18);
-}
-
-.panel--active-o {
-  border-color: rgba(251, 146, 60, 0.65);
-  box-shadow:
-    0 0 0 1px rgba(251, 146, 60, 0.35),
-    0 0 26px rgba(251, 146, 60, 0.18);
+    0 0 0 1px var(--pc-line),
+    0 0 26px var(--pc-soft);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .panel--active-x {
-    animation: pulse-x 2.2s ease-in-out infinite;
+  .panel--active {
+    animation: pulse-panel 2.2s ease-in-out infinite;
   }
 
-  .panel--active-o {
-    animation: pulse-o 2.2s ease-in-out infinite;
-  }
-
-  @keyframes pulse-x {
+  @keyframes pulse-panel {
     50% {
       box-shadow:
-        0 0 0 1px rgba(34, 211, 238, 0.55),
-        0 0 38px rgba(34, 211, 238, 0.32);
-    }
-  }
-
-  @keyframes pulse-o {
-    50% {
-      box-shadow:
-        0 0 0 1px rgba(251, 146, 60, 0.55),
-        0 0 38px rgba(251, 146, 60, 0.32);
+        0 0 0 1px var(--pc),
+        0 0 38px var(--pc-glow);
     }
   }
 }
@@ -596,16 +609,10 @@ button {
   flex: none;
 }
 
-.sym--x {
-  color: var(--x);
-  background: rgba(34, 211, 238, 0.12);
-  border: 1px solid rgba(34, 211, 238, 0.4);
-}
-
-.sym--o {
-  color: var(--o);
-  background: rgba(251, 146, 60, 0.12);
-  border: 1px solid rgba(251, 146, 60, 0.4);
+.sym {
+  color: var(--pc, var(--text));
+  background: var(--pc-soft, var(--bg-sunken));
+  border: 1px solid var(--pc-line, var(--line));
 }
 
 .panel-mid-score {
@@ -647,14 +654,9 @@ button {
   white-space: nowrap;
 }
 
-.turn-verb--x {
-  color: var(--x);
-  text-shadow: 0 0 14px var(--x-glow);
-}
-
-.turn-verb--o {
-  color: var(--o);
-  text-shadow: 0 0 14px var(--o-glow);
+.turn-verb--pc {
+  color: var(--pc);
+  text-shadow: 0 0 14px var(--pc-glow);
 }
 
 .turn-verb--dim {
@@ -899,16 +901,10 @@ button {
   border-radius: 14px;
 }
 
-.piece--active.piece--x .piece-inner {
+.piece--active .piece-inner {
   box-shadow:
-    0 0 0 2.5px var(--x),
-    0 0 22px var(--x-glow);
-}
-
-.piece--active.piece--o .piece-inner {
-  box-shadow:
-    0 0 0 2.5px var(--o),
-    0 0 22px var(--o-glow);
+    0 0 0 2.5px var(--pc),
+    0 0 22px var(--pc-glow);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -923,12 +919,8 @@ button {
   }
 }
 
-.piece--selected.piece--x .piece-inner {
-  background: rgba(34, 211, 238, 0.14);
-}
-
-.piece--selected.piece--o .piece-inner {
-  background: rgba(251, 146, 60, 0.14);
+.piece--selected .piece-inner {
+  background: var(--pc-soft);
 }
 
 .piece--winner .piece-inner {
@@ -962,14 +954,9 @@ button {
   padding: 0 4px;
 }
 
-.piece--x .piece-num {
-  color: var(--x);
-  border-color: var(--x-deep);
-}
-
-.piece--o .piece-num {
-  color: var(--o);
-  border-color: var(--o-deep);
+.piece .piece-num {
+  color: var(--pc);
+  border-color: var(--pc-deep);
 }
 
 .piece-num--p1 {
@@ -1013,12 +1000,8 @@ button {
   }
 }
 
-.win-line--x {
-  color: var(--x);
-}
-
-.win-line--o {
-  color: var(--o);
+.win-line {
+  color: var(--pc);
 }
 
 /* ---------- game controls ---------- */
@@ -1132,14 +1115,9 @@ button {
   line-height: 1.1;
 }
 
-.result-headline--x {
-  color: var(--x);
-  text-shadow: 0 0 24px var(--x-glow);
-}
-
-.result-headline--o {
-  color: var(--o);
-  text-shadow: 0 0 24px var(--o-glow);
+.result-headline--pc {
+  color: var(--pc);
+  text-shadow: 0 0 24px var(--pc-glow);
 }
 
 .result-reason {

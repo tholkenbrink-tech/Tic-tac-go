@@ -11,8 +11,8 @@ interface PanelProps {
   now: number
 }
 
-function SymbolTag({ symbol }: { symbol: Symbol_ }) {
-  return <span className={`sym sym--${symbol.toLowerCase()}`}>{symbol}</span>
+function SymbolTag({ symbol, owner }: { symbol: Symbol_; owner: PlayerId }) {
+  return <span className={`sym tint-${owner}`}>{symbol}</span>
 }
 
 export function PlayerPanel({ state, viewer, now }: PanelProps) {
@@ -23,18 +23,14 @@ export function PlayerPanel({ state, viewer, now }: PanelProps) {
   const activePlayer = playerForSymbol(state, active)
   const isMyTurn = activePlayer === viewer
   const playing = state.status === 'playing' && !state.paused && state.roundResult === null
-  const piece = expectedPiece(state.turn, state.startingSymbol)
-  const nextPiece = followingPiece(state.turn, state.startingSymbol)
+  const piece = expectedPiece(state.turn)
+  const nextPiece = followingPiece(state.turn)
   const verb = state.phase === 'placement' ? 'PLACE' : 'MOVE'
 
   const clock = state.config.clock
   const rem = remaining(state.clock, clock, active, playing ? now : state.clock.runningSince ?? now)
 
-  const activeClass = playing
-    ? isMyTurn
-      ? ` panel--active-${active.toLowerCase()}`
-      : ' panel--waiting'
-    : ''
+  const activeClass = playing ? (isMyTurn ? ' panel--active' : ' panel--waiting') : ''
 
   const roundInfo =
     state.winsNeeded !== null
@@ -49,19 +45,19 @@ export function PlayerPanel({ state, viewer, now }: PanelProps) {
 
   return (
     <section
-      className={`panel panel--${viewer}${activeClass}`}
+      className={`panel panel--${viewer} tint-${viewer}${activeClass}`}
       aria-label={`Status for ${state.players[viewer]}`}
     >
       <div className="panel-score">
         <span className={`panel-player is-me`}>
           <span className="name">{state.players[viewer]}</span>
-          <SymbolTag symbol={viewerSymbol} />
+          <SymbolTag symbol={viewerSymbol} owner={viewer} />
         </span>
         <span className="panel-mid-score" aria-label="Score">
           {state.scores[viewer]}–{state.scores[other]}
         </span>
         <span className="panel-player">
-          <SymbolTag symbol={otherSymbol} />
+          <SymbolTag symbol={otherSymbol} owner={other} />
           <span className="name">{state.players[other]}</span>
         </span>
         <span className="panel-round">{roundInfo}</span>
@@ -73,7 +69,7 @@ export function PlayerPanel({ state, viewer, now }: PanelProps) {
             <span className="turn-verb turn-verb--dim">{statusText}</span>
           ) : (
             <>
-              <span className={`turn-verb turn-verb--${active.toLowerCase()}`}>
+              <span className={`turn-verb turn-verb--pc tint-${activePlayer}`}>
                 {verb} {piece}
               </span>
               <span className="turn-next">

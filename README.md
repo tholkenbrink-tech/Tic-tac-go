@@ -9,18 +9,18 @@ player's panel faces each end of the phone.
 ## Game rules
 
 - The board is 3×3. Player 1 and Player 2 face each other across the phone.
-- Each player owns three numbered pieces: **Player 1 is always X (cyan),
-  Player 2 is always O (coral)** — colors never change during a match. There
-  are never more than three pieces per symbol on the board.
-- **The starting player alternates every round**: X starts round 1, O starts
-  round 2, and so on.
+- Each player owns three numbered pieces and a **personal color for the whole
+  match: Player 1 is cyan, Player 2 is coral**. Every piece, panel, tag, and
+  win effect is tinted with its owner's color.
+- **X always takes the first turn of a round**, and the X/O symbols swap
+  between rounds — so X is cyan in round 1 (Player 1 holds it) and coral in
+  round 2 (Player 2 holds it). Symbols stay distinguishable by shape.
 
 ### Placement phase
 
-Pieces enter the board on empty cells starter-first:
-**S1 → T1 → S2 → T2 → S3 → T3** (S = this round's starter, T = the other
-player), e.g. X1 → O1 → X2 → O2 → X3 → O3 when X starts. After every placement
-the board is checked for a win.
+Pieces enter the board on empty cells in this exact order:
+**X1 → O1 → X2 → O2 → X3 → O3.** After every placement the board is checked
+for a win.
 
 ### Movement phase
 
@@ -39,11 +39,11 @@ Any horizontal, vertical, or diagonal line of your three pieces wins the round.
 
 - Formats: best of 3 (first to 2), best of 5 (first to 3), best of 7
   (first to 4), or unlimited.
-- Players **keep their symbols for the whole match** (P1 = X, P2 = O); fairness
-  comes from the **starter alternating every round**.
+- Players **swap symbols every round** while **keeping their color**: whoever
+  holds X starts that round, and the color always tells you whose piece it is.
 - Drawn or manually ended rounds award no point but still advance the round and
-  alternate the starter. Restarting a round resets board and clocks without
-  changing the starter or scoring.
+  swap symbols. Restarting a round resets board and clocks without swapping or
+  scoring.
 
 ### Undo
 

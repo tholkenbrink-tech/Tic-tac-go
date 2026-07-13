@@ -180,21 +180,18 @@ describe('rounds and match scoring', () => {
     return place(s, 2)
   }
 
-  it('keeps colors fixed and alternates the starting player between rounds', () => {
+  it('swaps symbols between rounds while X always starts', () => {
     let s = winRoundForX(started())
     expect(s.p1Symbol).toBe('X')
-    expect(s.startingSymbol).toBe('X')
     s = matchReducer(s, { type: 'NEXT_ROUND' })
     expect(s.roundNumber).toBe(2)
-    // Player 1 keeps X forever…
-    expect(s.p1Symbol).toBe('X')
-    expect(playerForSymbol(s, 'X')).toBe('p1')
-    // …but O takes the first turn of round 2.
-    expect(s.startingSymbol).toBe('O')
-    expect(activeSymbol(s)).toBe('O')
+    // Player 2 holds X in round 2 and therefore starts.
+    expect(s.p1Symbol).toBe('O')
+    expect(playerForSymbol(s, 'X')).toBe('p2')
+    expect(activeSymbol(s)).toBe('X')
     s = matchReducer(s, { type: 'START_ROUND', now: T0 })
     const afterFirst = matchReducer(s, { type: 'PLACE', cell: 0, now: T0 })
-    expect(afterFirst.board[0]).toBe('O1')
+    expect(afterFirst.board[0]).toBe('X1')
   })
 
   it('restarts a round without swapping symbols or advancing the round number', () => {
@@ -218,9 +215,8 @@ describe('rounds and match scoring', () => {
     expect(s.scores).toEqual({ p1: 0, p2: 0 })
     s = matchReducer(s, { type: 'NEXT_ROUND' })
     expect(s.roundNumber).toBe(2)
-    // The starter still alternates after an abandoned round.
-    expect(s.startingSymbol).toBe('O')
-    expect(s.p1Symbol).toBe('X')
+    // Symbols still swap after an abandoned round.
+    expect(s.p1Symbol).toBe('O')
   })
 
   it('completes a best-of-3 when a player reaches 2 wins', () => {

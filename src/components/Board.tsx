@@ -26,10 +26,10 @@ export function Board({ state, onCellTap, onPieceTap, keyboardEnabled, onEscape 
     !state.paused &&
     state.roundResult === null &&
     state.undoRequest === null
-  const active = interactive ? expectedPiece(state.turn, state.startingSymbol) : null
+  const active = interactive ? expectedPiece(state.turn) : null
   const targets = new Set<CellIndex>(
     interactive && state.phase === 'movement' && state.selected
-      ? validDestinations(state.board, state.turn, state.selected, state.startingSymbol)
+      ? validDestinations(state.board, state.turn, state.selected)
       : [],
   )
   const winLine = state.roundResult?.kind === 'win' ? state.roundResult.line : null
@@ -87,7 +87,7 @@ export function Board({ state, onCellTap, onPieceTap, keyboardEnabled, onEscape 
         setKbActive(true)
         setCursor((prev) => {
           const occupant = s.board[prev] ?? null
-          const activePiece = expectedPiece(s.turn, s.startingSymbol)
+          const activePiece = expectedPiece(s.turn)
           if (occupant !== null && occupant === activePiece) {
             actionsRef.current.onPieceTap(occupant)
           } else {
@@ -177,6 +177,7 @@ export function Board({ state, onCellTap, onPieceTap, keyboardEnabled, onEscape 
             const col = cell % 3
             const row = Math.floor(cell / 3)
             const sym = symbolOf(piece)
+            const owner = sym === state.p1Symbol ? 'p1' : 'p2'
             const isActive = piece === active
             const isSelected = piece === state.selected
             const isWinner = winLine?.includes(cell) ?? false
@@ -186,7 +187,7 @@ export function Board({ state, onCellTap, onPieceTap, keyboardEnabled, onEscape 
                 key={piece}
                 className={[
                   'piece',
-                  `piece--${sym.toLowerCase()}`,
+                  `tint-${owner}`,
                   isActive ? 'piece--active' : '',
                   isSelected ? 'piece--selected' : '',
                   isWinner ? 'piece--winner' : '',
@@ -214,7 +215,7 @@ export function Board({ state, onCellTap, onPieceTap, keyboardEnabled, onEscape 
 
         {winLine && winSymbol && (
           <svg
-            className={`win-line win-line--${winSymbol.toLowerCase()}`}
+            className={`win-line tint-${winSymbol === state.p1Symbol ? 'p1' : 'p2'}`}
             viewBox="0 0 100 100"
             preserveAspectRatio="none"
             aria-hidden

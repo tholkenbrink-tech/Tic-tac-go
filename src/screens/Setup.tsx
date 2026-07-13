@@ -33,8 +33,8 @@ export function Setup({ initialP1, initialP2, onBack, onContinue }: SetupProps) 
           submit()
         }}
       >
-        <div className="field">
-          <label htmlFor="p1">Player 1</label>
+        <div className="field tint-p1">
+          <label htmlFor="p1">Player 1 · cyan</label>
           <input
             id="p1"
             value={p1}
@@ -48,8 +48,8 @@ export function Setup({ initialP1, initialP2, onBack, onContinue }: SetupProps) 
             placeholder="Player 1"
           />
         </div>
-        <div className="field">
-          <label htmlFor="p2">Player 2</label>
+        <div className="field tint-p2">
+          <label htmlFor="p2">Player 2 · coral</label>
           <input
             id="p2"
             value={p2}
@@ -67,8 +67,8 @@ export function Setup({ initialP1, initialP2, onBack, onContinue }: SetupProps) 
           {error}
         </p>
         <p className="hint">
-          Leave a field empty to just play as “Player 1” / “Player 2”. Player 1 always
-          plays X, Player 2 always plays O; the player who starts alternates each round.
+          Leave a field empty to just play as “Player 1” / “Player 2”. Your color stays
+          yours for the whole match; X and O swap between rounds, and X always starts.
           Names lock once the match starts.
         </p>
         <button type="submit" className="btn btn--primary">

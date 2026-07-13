@@ -9,12 +9,12 @@ import { ALL_PIECES } from './types.ts'
 import type { ClockType, MatchFormat, MatchState, PieceId } from './types.ts'
 
 export const STORAGE_KEYS = {
-  match: 'sttt.v4.match',
+  match: 'sttt.v5.match',
   prefs: 'sttt.v1.prefs',
 } as const
 
 /** Older match-save keys that are discarded on load. */
-const LEGACY_MATCH_KEYS = ['sttt.v1.match', 'sttt.v2.match', 'sttt.v3.match']
+const LEGACY_MATCH_KEYS = ['sttt.v1.match', 'sttt.v2.match', 'sttt.v3.match', 'sttt.v4.match']
 
 export type LayoutPref = 'auto' | 'faceToFace' | 'sideBySide'
 
@@ -65,7 +65,7 @@ function isRecord(x: unknown): x is Record<string, unknown> {
 
 export function validateMatch(x: unknown): x is MatchState {
   if (!isRecord(x)) return false
-  if (x.v !== 4) return false
+  if (x.v !== 5) return false
   if (!isRecord(x.players) || typeof x.players.p1 !== 'string' || typeof x.players.p2 !== 'string')
     return false
   if (!isRecord(x.config) || !isRecord(x.config.clock)) return false
@@ -75,7 +75,6 @@ export function validateMatch(x: unknown): x is MatchState {
     return false
   if (typeof x.roundNumber !== 'number' || typeof x.turn !== 'number') return false
   if (x.p1Symbol !== 'X' && x.p1Symbol !== 'O') return false
-  if (x.startingSymbol !== 'X' && x.startingSymbol !== 'O') return false
   if (!['ready', 'playing', 'roundComplete', 'matchComplete'].includes(x.status as string))
     return false
   if (!Array.isArray(x.board) || x.board.length !== 9) return false

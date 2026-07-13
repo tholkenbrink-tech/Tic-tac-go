@@ -93,17 +93,18 @@ export const MAX_UNDOS_PER_ROUND = 3
 
 export interface MatchState {
   /** Schema version for persistence. */
-  v: 4
+  v: 5
   players: Record<PlayerId, string>
   config: MatchConfig
   winsNeeded: number | null
   scores: Record<PlayerId, number>
   roundNumber: number
   roundsPlayed: number
-  /** Player 1 is always X, Player 2 always O — colors never change. */
+  /**
+   * Which symbol Player 1 holds this round; swaps every round. Colors follow
+   * the PLAYER (P1 cyan, P2 orange), not the symbol — X always starts.
+   */
   p1Symbol: Symbol_
-  /** Symbol that takes the first turn of this round; alternates every round. */
-  startingSymbol: Symbol_
   status: MatchStatus
   paused: boolean
   board: Board
@@ -143,12 +144,8 @@ export type MatchAction =
 /** All piece ids (for iteration/validation, not turn order). */
 export const ALL_PIECES: readonly PieceId[] = ['X1', 'X2', 'X3', 'O1', 'O2', 'O3']
 
-/** Turn order for a round, starter's pieces first: S1, T1, S2, T2, S3, T3. */
-export function pieceOrder(startingSymbol: Symbol_): readonly PieceId[] {
-  return startingSymbol === 'X'
-    ? ['X1', 'O1', 'X2', 'O2', 'X3', 'O3']
-    : ['O1', 'X1', 'O2', 'X2', 'O3', 'X3']
-}
+/** Fixed turn order: X always starts every round. */
+export const PIECE_ORDER: readonly PieceId[] = ['X1', 'O1', 'X2', 'O2', 'X3', 'O3']
 
 export const WIN_LINES: readonly (readonly [CellIndex, CellIndex, CellIndex])[] = [
   [0, 1, 2],
