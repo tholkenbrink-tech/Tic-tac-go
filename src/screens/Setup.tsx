@@ -13,12 +13,9 @@ export function Setup({ initialP1, initialP2, onBack, onContinue }: SetupProps) 
   const [error, setError] = useState('')
 
   function submit() {
-    const a = p1.trim()
-    const b = p2.trim()
-    if (!a || !b) {
-      setError('Both players need a name.')
-      return
-    }
+    // Empty fields fall back to defaults, so this step can simply be skipped.
+    const a = p1.trim() || 'Player 1'
+    const b = p2.trim() || 'Player 2'
     if (a.toLowerCase() === b.toLowerCase()) {
       setError('Choose two different names.')
       return
@@ -48,7 +45,7 @@ export function Setup({ initialP1, initialP2, onBack, onContinue }: SetupProps) 
               setP1(e.target.value)
               setError('')
             }}
-            placeholder="e.g. Ada"
+            placeholder="Player 1"
           />
         </div>
         <div className="field">
@@ -63,15 +60,16 @@ export function Setup({ initialP1, initialP2, onBack, onContinue }: SetupProps) 
               setP2(e.target.value)
               setError('')
             }}
-            placeholder="e.g. Grace"
+            placeholder="Player 2"
           />
         </div>
         <p className="field-error" role="alert">
           {error}
         </p>
         <p className="hint">
-          Player 1 always plays X, Player 2 always plays O. The player who starts
-          alternates each round. Names lock once the match starts.
+          Leave a field empty to just play as “Player 1” / “Player 2”. Player 1 always
+          plays X, Player 2 always plays O; the player who starts alternates each round.
+          Names lock once the match starts.
         </p>
         <button type="submit" className="btn btn--primary">
           Continue

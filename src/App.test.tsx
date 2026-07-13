@@ -74,6 +74,20 @@ describe('full match integration', () => {
     expect(screen.getByRole('button', { name: /place o1 on cell 1$/i })).toBeInTheDocument()
   }, 20_000)
 
+  it('defaults empty names to Player 1 / Player 2 so setup can be skipped', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: /new match/i }))
+    // Continue without typing anything.
+    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /start match/i }))
+    const tutorial = await screen.findByRole('dialog', { name: /how to play/i })
+    await user.click(within(tutorial).getByRole('button', { name: /skip/i }))
+    const ready = await screen.findByRole('dialog', { name: /round ready/i })
+    expect(within(ready).getByText(/Player 1 \(X\) starts this round/i)).toBeInTheDocument()
+    expect(within(ready).getByText('Player 2')).toBeInTheDocument()
+  })
+
   it('skips setup via quick play when names are saved', async () => {
     savePrefs({ ...DEFAULT_PREFS, p1Name: 'Ada', p2Name: 'Grace', tutorialDone: true })
     const user = userEvent.setup()
