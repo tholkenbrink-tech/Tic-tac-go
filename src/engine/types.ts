@@ -123,7 +123,7 @@ export interface MatchState {
   /** Pending undo approval, or null. Clocks are stopped while it is open. */
   undoRequest: UndoRequest | null
   /** Computer opponent (always Player 2), or null for human vs human. */
-  ai: { level: 'beginner' | 'medium' | 'pro' } | null
+  ai: { level: 'beginner' | 'medium' | 'hard' | 'pro' } | null
 }
 
 export type MatchAction =

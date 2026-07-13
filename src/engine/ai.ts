@@ -5,17 +5,20 @@
  *  - beginner ≈ 800 Elo: mostly random; often misses wins and blocks
  *  - medium   ≈ 1400 Elo: takes wins, blocks threats, avoids blunders,
  *    with occasional human-like lapses
+ *  - hard     ≈ 1800 Elo: never lapses; a 4-ply search that sees forks and
+ *    short tactics but lacks a deep horizon
  *  - pro      ≈ 2200 Elo: depth-8 alpha-beta search, near-perfect play
  */
 
 import { expectedPiece, findWin, phaseForTurn, pieceCell } from './rules.ts'
 import type { Board, CellIndex, MatchState, PieceId } from './types.ts'
 
-export type AiLevel = 'beginner' | 'medium' | 'pro'
+export type AiLevel = 'beginner' | 'medium' | 'hard' | 'pro'
 
 export const AI_LEVELS: { value: AiLevel; label: string; elo: string }[] = [
   { value: 'beginner', label: 'Beginner', elo: '≈ 800 Elo' },
   { value: 'medium', label: 'Medium', elo: '≈ 1400 Elo' },
+  { value: 'hard', label: 'Hard', elo: '≈ 1800 Elo' },
   { value: 'pro', label: 'Pro', elo: '≈ 2200 Elo' },
 ]
 
@@ -135,12 +138,14 @@ function chooseCell(board: Board, turn: number, level: AiLevel, rng: Rng): CellI
     return safe.length ? bestByWeight(safe, rng) : pick(legal, rng)
   }
 
-  // pro: full search, positional tie-breaks among equal-best moves.
+  // hard and pro: search with positional tie-breaks among equal-best moves.
+  // Hard's shallow horizon (4 plies) still misses deep traps that pro sees.
+  const depth = level === 'pro' ? 8 : 4
   let bestScore = -Infinity
   let best: CellIndex[] = []
   for (const cell of legal) {
     const from = applyMove(board, turn, cell)
-    const score = findWin(board) ? 1000 : -negamax(board, turn + 1, 8, -Infinity, Infinity)
+    const score = findWin(board) ? 1000 : -negamax(board, turn + 1, depth, -Infinity, Infinity)
     undoMove(board, turn, cell, from)
     if (score > bestScore) {
       bestScore = score

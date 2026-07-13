@@ -106,7 +106,7 @@ export function validateMatch(x: unknown): x is MatchState {
   }
   if (typeof x.undosUsed !== 'number' || x.undosUsed < 0) return false
   if (x.ai !== null && x.ai !== undefined) {
-    if (!isRecord(x.ai) || !['beginner', 'medium', 'pro'].includes(x.ai.level as string))
+    if (!isRecord(x.ai) || !['beginner', 'medium', 'hard', 'pro'].includes(x.ai.level as string))
       return false
   }
   return true
@@ -196,7 +196,7 @@ export function loadPrefs(): Prefs {
         ? (parsed.layout as LayoutPref)
         : DEFAULT_PREFS.layout,
       p2Kind: parsed.p2Kind === 'computer' ? 'computer' : 'human',
-      aiLevel: ['beginner', 'medium', 'pro'].includes(parsed.aiLevel as string)
+      aiLevel: ['beginner', 'medium', 'hard', 'pro'].includes(parsed.aiLevel as string)
         ? (parsed.aiLevel as AiLevel)
         : DEFAULT_PREFS.aiLevel,
     }

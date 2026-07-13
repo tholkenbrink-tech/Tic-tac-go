@@ -122,6 +122,8 @@ export function Setup({
                 player: {aiLevel === 'beginner' && 'it often misses wins and blocks.'}
                 {aiLevel === 'medium' &&
                   'it takes wins and blocks threats, with the occasional lapse.'}
+                {aiLevel === 'hard' &&
+                  'it never slips and spots forks, but deep traps still work.'}
                 {aiLevel === 'pro' && 'it searches deeply and rarely makes a mistake.'}
               </p>
             </>

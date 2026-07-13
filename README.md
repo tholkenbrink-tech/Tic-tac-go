@@ -50,8 +50,9 @@ Any horizontal, vertical, or diagonal line of your three pieces wins the round.
 Player 2 can be the computer: pick **🤖 Computer** in the player setup and
 choose a strength. Levels are calibrated like chess skill —
 **Beginner ≈ 800 Elo** (often misses wins and blocks), **Medium ≈ 1400 Elo**
-(takes wins, blocks threats, occasional lapses), **Pro ≈ 2200 Elo** (deep
-alpha-beta search, near-perfect). The computer wears Player 2's coral color,
+(takes wins, blocks threats, occasional lapses), **Hard ≈ 1800 Elo** (never
+slips, sees forks via a 4-ply search, but misses deep traps), **Pro ≈ 2200
+Elo** (depth-8 alpha-beta search, near-perfect). The computer wears Player 2's coral color,
 moves on its own after a short readable delay (~0.7–1.1s; in the movement
 phase it visibly selects its piece before moving), approves your undo
 requests automatically, and the layout switches to side-by-side since nobody

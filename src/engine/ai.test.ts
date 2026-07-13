@@ -123,11 +123,24 @@ describe('strength ladder', () => {
     return s.roundResult?.kind === 'win' ? s.roundResult.winnerSymbol : null
   }
 
+  /** Wins of `a` minus wins of `b` over `games` color-alternating rounds. */
+  function margin(a: AiLevel, b: AiLevel, games = 40): number {
+    let aWins = 0
+    let bWins = 0
+    for (let i = 0; i < games; i++) {
+      // Alternate colors so first-move advantage cancels out.
+      const aAsX = i % 2 === 0
+      const winner = aAsX ? playRound(a, b) : playRound(b, a)
+      if (winner === (aAsX ? 'X' : 'O')) aWins++
+      if (winner === (aAsX ? 'O' : 'X')) bWins++
+    }
+    return aWins - bWins
+  }
+
   it('pro beats beginner convincingly; medium sits in between', () => {
     let proWins = 0
     let begWins = 0
     for (let i = 0; i < 40; i++) {
-      // Alternate colors so first-move advantage cancels out.
       const proAsX = i % 2 === 0
       const winner = proAsX ? playRound('pro', 'beginner') : playRound('beginner', 'pro')
       if (winner === (proAsX ? 'X' : 'O')) proWins++
@@ -135,14 +148,23 @@ describe('strength ladder', () => {
     }
     expect(proWins).toBeGreaterThan(begWins * 2)
 
-    let medWins = 0
-    let begWins2 = 0
-    for (let i = 0; i < 40; i++) {
-      const medAsX = i % 2 === 0
-      const winner = medAsX ? playRound('medium', 'beginner') : playRound('beginner', 'medium')
-      if (winner === (medAsX ? 'X' : 'O')) medWins++
-      if (winner === (medAsX ? 'O' : 'X')) begWins2++
-    }
-    expect(medWins).toBeGreaterThan(begWins2)
+    expect(margin('medium', 'beginner')).toBeGreaterThan(0)
+  })
+
+  it('hard sits between medium and pro', () => {
+    // Hard clearly outplays medium…
+    expect(margin('hard', 'medium')).toBeGreaterThan(0)
+    // …and does not outplay pro (deep search dominates or draws level).
+    expect(margin('pro', 'hard', 30)).toBeGreaterThanOrEqual(0)
+  })
+
+  it('hard always takes wins and blocks threats', () => {
+    let s = started('hard')
+    for (const cell of [0, 3, 1, 4] as CellIndex[]) s = place(s, cell)
+    expect(chooseAiMove(s, rngOf(0.99)).cell).toBe(2)
+
+    let b = started('hard')
+    for (const cell of [0, 4, 1] as CellIndex[]) b = place(b, cell)
+    expect(chooseAiMove(b, rngOf(0.99)).cell).toBe(2)
   })
 })
