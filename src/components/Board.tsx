@@ -7,8 +7,10 @@ import { PieceGlyph } from './PieceGlyph.tsx'
 interface BoardProps {
   state: MatchState
   onCellTap: (cell: CellIndex) => void
+  onPieceTap: (piece: PieceId) => void
   /** True while no overlay is open, enabling arrow-key/Enter play. */
   keyboardEnabled: boolean
+  onEscape: () => void
 }
 
 /** Centers of each cell in the 0..100 SVG space for the win-line overlay. */
@@ -18,43 +20,50 @@ function cellCenter(cell: CellIndex): { x: number; y: number } {
   return { x: col * 33.4 + 16.7, y: row * 33.4 + 16.7 }
 }
 
-export function Board({ state, onCellTap, keyboardEnabled }: BoardProps) {
+export function Board({ state, onCellTap, onPieceTap, keyboardEnabled, onEscape }: BoardProps) {
   const interactive =
     state.status === 'playing' &&
     !state.paused &&
     state.roundResult === null &&
     state.undoRequest === null
   const active = interactive ? expectedPiece(state.turn) : null
-  // The expected piece is always implicitly selected during the movement
-  // phase: its destinations glow immediately and a single tap moves it.
   const targets = new Set<CellIndex>(
-    interactive && state.phase === 'movement' && active
-      ? validDestinations(state.board, state.turn, active)
+    interactive && state.phase === 'movement' && state.selected
+      ? validDestinations(state.board, state.turn, state.selected)
       : [],
   )
   const winLine = state.roundResult?.kind === 'win' ? state.roundResult.line : null
   const winSymbol = state.roundResult?.kind === 'win' ? state.roundResult.winnerSymbol : null
 
   // Double-tap protection lives in the reducer: a repeated tap is an invalid
-  // action (occupied cell, no legal move) and is ignored, while round
-  // transitions disable every cell below.
+  // action (occupied cell, no selection, wrong piece) and is ignored, while
+  // round transitions disable every cell below.
 
-  // Keyboard play: arrow keys move a cursor over the grid, Enter/Space place
-  // or move onto the focused cell. The cursor only becomes visible once a key
-  // is used, so touch players never see it.
+  // Keyboard play: arrow keys move a cursor over the grid, Enter/Space act on
+  // the focused cell, Escape cancels a selection. The cursor only becomes
+  // visible once a key is used, so touch players never see it.
   const [cursor, setCursor] = useState<CellIndex>(4)
   const [kbActive, setKbActive] = useState(false)
-  const stateRef = useRef({ interactive, keyboardEnabled })
-  stateRef.current = { interactive, keyboardEnabled }
-  const actionsRef = useRef({ onCellTap })
-  actionsRef.current = { onCellTap }
+  const stateRef = useRef({ state, interactive, keyboardEnabled })
+  stateRef.current = { state, interactive, keyboardEnabled }
+  const actionsRef = useRef({ onCellTap, onPieceTap, onEscape })
+  actionsRef.current = { onCellTap, onPieceTap, onEscape }
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      const { interactive: canPlay, keyboardEnabled: kb } = stateRef.current
-      if (!kb || !canPlay) return
+      const { state: s, interactive: canPlay, keyboardEnabled: kb } = stateRef.current
+      if (!kb) return
       const target = e.target as HTMLElement | null
       if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return
+
+      if (e.key === 'Escape') {
+        if (s.selected) {
+          e.preventDefault()
+          actionsRef.current.onEscape()
+        }
+        return
+      }
+      if (!canPlay) return
 
       const moves: Record<string, [number, number]> = {
         ArrowUp: [0, -1],
@@ -77,7 +86,13 @@ export function Board({ state, onCellTap, keyboardEnabled }: BoardProps) {
         e.preventDefault()
         setKbActive(true)
         setCursor((prev) => {
-          actionsRef.current.onCellTap(prev)
+          const occupant = s.board[prev] ?? null
+          const activePiece = expectedPiece(s.turn)
+          if (occupant !== null && occupant === activePiece) {
+            actionsRef.current.onPieceTap(occupant)
+          } else {
+            actionsRef.current.onCellTap(prev)
+          }
           return prev
         })
       }
@@ -124,11 +139,14 @@ export function Board({ state, onCellTap, keyboardEnabled }: BoardProps) {
               label = occupant
                 ? `Cell ${cell + 1}, occupied by ${occupant}`
                 : `Place ${active ?? ''} on cell ${cell + 1}`
+            } else if (isActivePieceHere) {
+              enabled = true
+              label = state.selected
+                ? `Cancel selection of ${occupant}`
+                : `Select ${occupant} to move`
             } else if (isTarget) {
               enabled = true
-              label = `Move ${active ?? ''} to cell ${cell + 1}`
-            } else if (isActivePieceHere) {
-              label = `${occupant}, moving now — tap a highlighted cell`
+              label = `Move ${state.selected ?? ''} to cell ${cell + 1}`
             } else {
               label = occupant
                 ? `Cell ${cell + 1}, occupied by ${occupant}`
@@ -143,7 +161,10 @@ export function Board({ state, onCellTap, keyboardEnabled }: BoardProps) {
                 className={`cell${isTarget ? ' cell--target' : ''}${isCursor ? ' cell--cursor' : ''}`}
                 disabled={!enabled}
                 aria-label={label}
-                onClick={() => onCellTap(cell)}
+                onClick={() => {
+                  if (isActivePieceHere && occupant) onPieceTap(occupant)
+                  else onCellTap(cell)
+                }}
               />
             )
           })}
@@ -157,6 +178,7 @@ export function Board({ state, onCellTap, keyboardEnabled }: BoardProps) {
             const row = Math.floor(cell / 3)
             const sym = symbolOf(piece)
             const isActive = piece === active
+            const isSelected = piece === state.selected
             const isWinner = winLine?.includes(cell) ?? false
             const num = piece[1]
             return (
@@ -166,7 +188,7 @@ export function Board({ state, onCellTap, keyboardEnabled }: BoardProps) {
                   'piece',
                   `piece--${sym.toLowerCase()}`,
                   isActive ? 'piece--active' : '',
-                  isActive && state.phase === 'movement' ? 'piece--selected' : '',
+                  isSelected ? 'piece--selected' : '',
                   isWinner ? 'piece--winner' : '',
                   entered.has(piece) ? '' : 'piece--enter',
                 ]

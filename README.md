@@ -22,12 +22,11 @@ for a win.
 ### Movement phase
 
 If nobody won during placement, the same order repeats forever — but now each
-piece **moves** instead. The piece whose turn it is glows and is ready
-automatically — its valid destinations are highlighted the moment the turn
-starts, and a single tap on any highlighted empty cell moves it there (it does
-not need to be adjacent, but it cannot stay put or land on another piece).
-Wins are checked after every move. Repeated positions are allowed — there is
-no automatic repetition draw.
+piece **moves** instead: tap the glowing active piece, then tap any empty cell
+(it does not need to be adjacent, but it cannot stay put or land on another
+piece). Tap the active piece again to cancel a selection. Wins are checked
+after every move. Repeated positions are allowed — there is no automatic
+repetition draw.
 
 ### Winning
 
@@ -263,9 +262,6 @@ are rejected inside the reducer, so no UI bug can corrupt a game.
   winner.
 - Rapid consecutive taps are legal (it's a speed game); invalid ones are
   ignored by the reducer rather than debounced away.
-- The moving piece is auto-selected: since only one piece may ever move, a
-  select-then-move interaction would be pure friction. The trade-off — a stray
-  tap can move your piece — is covered by the dual-approval undo.
 - The in-game menu automatically pauses the game so no dialog consumes clock
   time.
 

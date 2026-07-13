@@ -5,7 +5,13 @@ import { PlayerPanel } from '../components/PlayerPanel.tsx'
 import { Tutorial } from './Tutorial.tsx'
 import { canRequestUndo, symbolForPlayer } from '../engine/reducer.ts'
 import { MAX_UNDOS_PER_ROUND } from '../engine/types.ts'
-import type { CellIndex, MatchAction, MatchState, RoundResult } from '../engine/types.ts'
+import type {
+  CellIndex,
+  MatchAction,
+  MatchState,
+  PieceId,
+  RoundResult,
+} from '../engine/types.ts'
 import type { LayoutMode } from '../lib/device.ts'
 
 interface GameScreenProps {
@@ -187,9 +193,14 @@ export function GameScreen({
         <Board
           state={state}
           keyboardEnabled={!overlayOpen}
+          onEscape={() => dispatch({ type: 'DESELECT' })}
           onCellTap={(cell: CellIndex) => {
             if (state.phase === 'placement') dispatch({ type: 'PLACE', cell, now: Date.now() })
-            else dispatch({ type: 'MOVE', cell, now: Date.now() })
+            else if (state.selected) dispatch({ type: 'MOVE', cell, now: Date.now() })
+          }}
+          onPieceTap={(piece: PieceId) => {
+            if (state.selected === piece) dispatch({ type: 'DESELECT' })
+            else dispatch({ type: 'SELECT', piece })
           }}
         />
       </div>
