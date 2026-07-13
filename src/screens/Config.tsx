@@ -1,6 +1,16 @@
 import type { LayoutPref, Prefs } from '../engine/persist.ts'
 import type { ClockType, MatchFormat } from '../engine/types.ts'
-import { defaultLayout } from '../lib/device.ts'
+import { defaultLayout, isTablet, isTouchDevice } from '../lib/device.ts'
+
+function autoLayoutHint(): string {
+  if (!isTouchDevice())
+    return 'Auto on this device: side-by-side — both panels face the same way for players sharing a screen.'
+  if (isTablet())
+    return 'Auto on this device: face-to-face — lay it flat between you; the far panel is rotated for the opposite player.'
+  return defaultLayout() === 'faceToFace'
+    ? 'Auto on this phone: face-to-face when upright, side-by-side when rotated to landscape.'
+    : 'Auto on this phone: side-by-side in landscape, face-to-face when upright.'
+}
 
 interface ConfigProps {
   prefs: Prefs
@@ -136,10 +146,7 @@ export function Config({ prefs, onChange, onBack, onStart }: ConfigProps) {
           ))}
         </div>
         <p className="hint">
-          {prefs.layout === 'auto' &&
-            (defaultLayout() === 'faceToFace'
-              ? 'Auto on this device: face-to-face — lay it flat between you; the far panel is rotated for the opposite player.'
-              : 'Auto on this device: side-by-side — both panels face the same way for players sharing a screen.')}
+          {prefs.layout === 'auto' && autoLayoutHint()}
           {prefs.layout === 'faceToFace' &&
             'Device lies flat between you; the far panel is rotated for the opposite player.'}
           {prefs.layout === 'sideBySide' &&

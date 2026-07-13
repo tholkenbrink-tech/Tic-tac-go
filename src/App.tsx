@@ -65,6 +65,16 @@ export default function App() {
     return () => window.removeEventListener('pointerdown', prime)
   }, [])
 
+  // Re-resolve the "auto" layout when the device rotates.
+  const [, setOrientationTick] = useState(0)
+  useEffect(() => {
+    const mq = window.matchMedia?.('(orientation: landscape)')
+    if (!mq?.addEventListener) return
+    const onChange = () => setOrientationTick((n) => n + 1)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
   // Clock ticker: re-render for time displays and detect expiry. Timestamp
   // math in the engine keeps this accurate regardless of tick rate.
   const clocksLive =

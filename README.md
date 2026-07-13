@@ -77,10 +77,16 @@ mid-game from the menu:
 
 - **Face-to-face** — the device lies flat between the players; the far panel
   and the duplicate piece-number badges are rotated 180° so the opposite
-  player reads everything right-side up. Default on phones and iPads.
+  player reads everything right-side up. Default on tablets and on upright
+  phones.
 - **Side-by-side** — everything reads the same way up, for players sitting
-  next to each other. Default on desktop; on wide screens the two player
-  panels flank the board.
+  next to each other. Default on desktop and on phones held in landscape
+  (a landscape phone is too shallow for opposite-facing panels); on landscape
+  and wide screens the two player panels flank the board.
+
+The **Auto** setting re-resolves live when a phone is rotated: upright →
+face-to-face, landscape → side-by-side. Tablets keep face-to-face in both
+orientations, and an explicit layout choice always overrides Auto.
 
 In every layout the active player's panel glows and pulses in their symbol's
 color while the waiting player's panel dims, so it is always obvious whose

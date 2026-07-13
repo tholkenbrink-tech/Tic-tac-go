@@ -15,13 +15,30 @@ export function isTouchDevice(): boolean {
   return window.matchMedia?.('(pointer: coarse)').matches ?? false
 }
 
+/** Tablets: iPads, or any touch screen with a short side of at least 600px. */
+export function isTablet(): boolean {
+  if (!isTouchDevice()) return false
+  if (isIPad()) return true
+  if (typeof screen === 'undefined') return false
+  return Math.min(screen.width, screen.height) >= 600
+}
+
+export function isLandscape(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia?.('(orientation: landscape)').matches ?? false
+}
+
 /**
- * Default table layout: touch devices (phones, iPads) lie flat between two
- * players, so face-to-face is the default there; on desktop the players sit
- * next to each other in front of the screen.
+ * Default table layout:
+ * - desktop: side-by-side (players share the screen)
+ * - tablets: face-to-face (device lies flat between the players)
+ * - phones: face-to-face upright, side-by-side when rotated to landscape
+ *   (a landscape phone is too shallow for opposite-facing panels)
  */
 export function defaultLayout(): LayoutMode {
-  return isTouchDevice() ? 'faceToFace' : 'sideBySide'
+  if (!isTouchDevice()) return 'sideBySide'
+  if (isTablet()) return 'faceToFace'
+  return isLandscape() ? 'sideBySide' : 'faceToFace'
 }
 
 export function resolveLayout(pref: LayoutPref): LayoutMode {

@@ -424,18 +424,18 @@ button {
   right: 6%;
 }
 
-/* Wide screens (desktop, iPad landscape) in side-by-side mode: the two
-   player panels flank the board. */
-@media (min-width: 900px) {
+/* Side-by-side flanking grid: the two player panels flank the board. Applies
+   on wide screens (desktop, iPad landscape) and on any landscape phone. */
+@media (min-width: 900px), (orientation: landscape) and (min-width: 560px) {
   .game--side {
     display: grid;
-    grid-template-columns: minmax(240px, 1fr) auto minmax(240px, 1fr);
+    grid-template-columns: minmax(150px, 1fr) auto minmax(150px, 1fr);
     grid-template-rows: 1fr auto;
     grid-template-areas:
       'left board right'
       'left controls right';
     align-items: center;
-    column-gap: 18px;
+    column-gap: 12px;
     max-width: 1240px;
     width: 100%;
     margin: 0 auto;
@@ -455,16 +455,7 @@ button {
 
   .game--side .controls {
     grid-area: controls;
-    padding-bottom: 10px;
-  }
-
-  .game--side .board-wrap {
-    width: min(74dvh, 560px);
-  }
-
-  .game--side .panel {
-    gap: 14px;
-    padding: 16px;
+    padding-bottom: 6px;
   }
 
   .game--side .panel-score {
@@ -476,6 +467,36 @@ button {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+}
+
+/* Extra room on genuinely wide screens. */
+@media (min-width: 900px) {
+  .game--side {
+    grid-template-columns: minmax(240px, 1fr) auto minmax(240px, 1fr);
+    column-gap: 18px;
+  }
+
+  .game--side .board-wrap {
+    width: min(74dvh, 560px);
+  }
+
+  .game--side .panel {
+    gap: 14px;
+    padding: 16px;
+  }
+}
+
+/* Landscape phones: size the board by height, leaving room for the controls
+   row beneath it. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .game--side .board-wrap {
+    width: min(64dvh, 440px);
+  }
+
+  .game--side .panel-status {
+    min-height: 0;
+    gap: 6px;
   }
 }
 
