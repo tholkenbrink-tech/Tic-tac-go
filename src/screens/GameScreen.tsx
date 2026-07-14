@@ -195,8 +195,17 @@ export function GameScreen({
     state.status === 'playing' &&
     activeSymbol(state) === symbolForPlayer(state, 'p2')
 
+  const roundInfo =
+    state.winsNeeded !== null
+      ? `Round ${state.roundNumber} · first to ${state.winsNeeded}`
+      : `Round ${state.roundNumber}`
+
   return (
     <div className={`game game--${layout === 'sideBySide' ? 'side' : 'face'}`}>
+      {/* Match meta shown once, unrotated — deliberately not duplicated for
+          the opposite player in face-to-face play. */}
+      <div className="game-meta">{roundInfo}</div>
+
       <PlayerPanel state={state} viewer="p2" now={now} />
 
       <div className="game-mid">

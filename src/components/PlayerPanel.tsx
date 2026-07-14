@@ -32,11 +32,6 @@ export function PlayerPanel({ state, viewer, now }: PanelProps) {
 
   const activeClass = playing ? (isMyTurn ? ' panel--active' : ' panel--waiting') : ''
 
-  const roundInfo =
-    state.winsNeeded !== null
-      ? `Round ${state.roundNumber} · first to ${state.winsNeeded}`
-      : `Round ${state.roundNumber}`
-
   let statusText: string
   if (state.paused) statusText = 'PAUSED'
   else if (state.status === 'ready') statusText = 'GET READY'
@@ -117,8 +112,6 @@ export function PlayerPanel({ state, viewer, now }: PanelProps) {
           )}
         </div>
       </div>
-
-      <div className="panel-meta">{roundInfo}</div>
     </section>
   )
 }
