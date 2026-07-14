@@ -259,6 +259,43 @@ button {
   min-height: 48px;
 }
 
+/* Quiet opt-in checkbox (e.g. "Play against the computer"): deliberately
+   understated next to the tinted inputs — no border, dim text, plain case.
+   `label.check` matches `.field label` in specificity; being later, it wins. */
+label.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-top: 2px;
+  color: var(--text-dim);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.check input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  flex: none;
+  accent-color: var(--pc, var(--x));
+  cursor: pointer;
+}
+
+.check input[type='checkbox']:focus-visible {
+  outline: 3px solid var(--x);
+  outline-offset: 2px;
+}
+
+label.check:has(input:checked) {
+  color: var(--text);
+}
+
 .switch {
   position: relative;
   width: 58px;

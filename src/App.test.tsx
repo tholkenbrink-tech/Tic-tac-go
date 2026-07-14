@@ -194,8 +194,13 @@ describe('full match integration', () => {
     render(<App />)
     await user.click(screen.getByRole('button', { name: /new match/i }))
 
-    // Player 2 becomes the computer, strength selectable.
-    await user.click(screen.getByRole('button', { name: /computer/i }))
+    // Human vs human is the default: the name field is there, no level buttons.
+    expect(screen.getByLabelText('Player 2 name')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Beginner' })).not.toBeInTheDocument()
+
+    // The quiet opt-in checkbox swaps the name field for the strength picker.
+    await user.click(screen.getByRole('checkbox', { name: /play against the computer/i }))
+    expect(screen.queryByLabelText('Player 2 name')).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Beginner' }))
     expect(screen.getByText(/≈ 800 Elo/i)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /continue/i }))

@@ -72,23 +72,7 @@ export function Setup({
         </div>
 
         <div className="field tint-p2">
-          <label htmlFor="p2kind">Player 2 · coral</label>
-          <div className="seg" id="p2kind" role="group" aria-label="Player 2 kind">
-            <button
-              type="button"
-              aria-pressed={p2Kind === 'human'}
-              onClick={() => setP2Kind('human')}
-            >
-              Human
-            </button>
-            <button
-              type="button"
-              aria-pressed={p2Kind === 'computer'}
-              onClick={() => setP2Kind('computer')}
-            >
-              🤖 Computer
-            </button>
-          </div>
+          <label htmlFor="p2">Player 2 · coral</label>
           {p2Kind === 'human' ? (
             <input
               id="p2"
@@ -128,6 +112,18 @@ export function Setup({
               </p>
             </>
           )}
+          {/* Quiet opt-in: human vs human is the default experience. */}
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={p2Kind === 'computer'}
+              onChange={(e) => {
+                setP2Kind(e.target.checked ? 'computer' : 'human')
+                setError('')
+              }}
+            />
+            <span>Play against the computer</span>
+          </label>
         </div>
 
         <p className="field-error" role="alert">

@@ -47,8 +47,9 @@ Any horizontal, vertical, or diagonal line of your three pieces wins the round.
 
 ### Computer opponent
 
-Player 2 can be the computer: pick **🤖 Computer** in the player setup and
-choose a strength. Levels are calibrated like chess skill —
+Human vs human is the default. Playing the machine is a quiet opt-in: tick
+**“Play against the computer”** under the Player 2 name in the player setup,
+then choose a strength. Levels are calibrated like chess skill —
 **Beginner ≈ 800 Elo** (often misses wins and blocks), **Medium ≈ 1400 Elo**
 (takes wins, blocks threats, occasional lapses), **Hard ≈ 1800 Elo** (never
 slips, sees forks via a 4-ply search, but misses deep traps), **Pro ≈ 2200
