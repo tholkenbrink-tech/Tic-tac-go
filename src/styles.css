@@ -1150,6 +1150,11 @@ label.check:has(input:checked) {
   outline-offset: 2px;
 }
 
+.ctl--icon {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
 /* ---------- overlays ---------- */
 .overlay {
   position: fixed;
@@ -1183,6 +1188,15 @@ label.check:has(input:checked) {
   margin: 0;
   font-size: 24px;
   font-weight: 900;
+}
+
+.menu-label {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-dim);
 }
 
 /* Overlay variant that covers only the board (inside .game-mid), leaving the

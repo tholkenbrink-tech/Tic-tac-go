@@ -1,3 +1,4 @@
+import { ControlIcon } from '../components/ControlIcon.tsx'
 import { PieceGlyph } from '../components/PieceGlyph.tsx'
 
 interface WelcomeProps {
@@ -23,7 +24,7 @@ export function Welcome({
         aria-label="Settings"
         onClick={onOpenSettings}
       >
-        ⚙
+        <ControlIcon type="gear" size="1.2em" />
       </button>
       <div className="brand">
         <div className="brand-logo" aria-hidden>

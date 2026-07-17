@@ -1,3 +1,4 @@
+import { ControlIcon } from './ControlIcon.tsx'
 import type { LayoutPref, Prefs } from '../engine/persist.ts'
 import { defaultLayout, isTablet, isTouchDevice } from '../lib/device.ts'
 
@@ -22,7 +23,9 @@ export function SettingsSheet({ prefs, onChange, onClose }: SettingsSheetProps) 
   return (
     <div className="overlay" role="dialog" aria-modal="true" aria-label="Settings">
       <div className="overlay-card" style={{ textAlign: 'left' }}>
-        <h2 style={{ textAlign: 'center' }}>⚙ Settings</h2>
+        <h2 style={{ textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <ControlIcon type="gear" size="0.85em" /> Settings
+        </h2>
 
         <div className="toggle-row">
           <span style={{ fontWeight: 700 }}>Sound effects</span>

@@ -26,7 +26,7 @@ interface GameScreenProps {
   onNewMatch: () => void
 }
 
-type Confirm = 'restart' | 'endRound' | 'endMatch' | 'exit' | null
+type Confirm = 'endRound' | 'endMatch' | 'exit' | null
 
 const REASON_TEXT: Record<Exclude<RoundResult['reason'], never>, string> = {
   line: 'Three in a row',
@@ -144,16 +144,6 @@ export function GameScreen({
   const p2Sym = symbolForPlayer(state, 'p2')
 
   const confirmProps = {
-    restart: {
-      title: 'Restart this round?',
-      message:
-        'The board and clocks reset. The round number and X/O assignments stay the same. Nobody scores.',
-      confirmLabel: 'Restart round',
-      action: () => {
-        dispatch({ type: 'RESTART_ROUND' })
-        closeMenu(false)
-      },
-    },
     endRound: {
       title: 'End this round with no score?',
       message:
@@ -296,6 +286,17 @@ export function GameScreen({
             <ControlIcon type="undo" size="1em" /> Undo ({undosLeft})
           </button>
         )}
+        <button
+          type="button"
+          className="ctl ctl--icon"
+          aria-label="Show rules"
+          onClick={() => {
+            pauseForUi()
+            setRulesOpen(true)
+          }}
+        >
+          <ControlIcon type="help" size="1.1em" />
+        </button>
         <button type="button" className="ctl" onClick={openMenu}>
           <ControlIcon type="menu" size="1em" /> Menu
         </button>
@@ -421,17 +422,32 @@ export function GameScreen({
               <button type="button" className="btn btn--primary" onClick={() => closeMenu(true)}>
                 Back to game
               </button>
-              <button type="button" className="btn" onClick={() => setRulesOpen(true)}>
-                Show rules
-              </button>
-              <button type="button" className="btn" onClick={onToggleLayout}>
-                Layout: {layout === 'faceToFace' ? 'Face-to-face' : 'Side-by-side'} — switch
-              </button>
-              {(playing || state.status === 'ready') && (
-                <button type="button" className="btn" onClick={() => setConfirm('restart')}>
-                  Restart round
-                </button>
-              )}
+
+              <div>
+                <p className="menu-label">Table layout</p>
+                <div className="seg" role="group" aria-label="Table layout">
+                  <button
+                    type="button"
+                    aria-pressed={layout === 'faceToFace'}
+                    onClick={() => layout !== 'faceToFace' && onToggleLayout()}
+                  >
+                    Face-to-face
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={layout === 'sideBySide'}
+                    onClick={() => layout !== 'sideBySide' && onToggleLayout()}
+                  >
+                    Side-by-side
+                  </button>
+                </div>
+                <p className="hint">
+                  {layout === 'faceToFace'
+                    ? 'The device lies flat between you; the far panel is rotated for the opposite player.'
+                    : 'Both panels face the same way, for players sitting side by side.'}
+                </p>
+              </div>
+
               {playing && (
                 <button type="button" className="btn" onClick={() => setConfirm('endRound')}>
                   End round (no score)
@@ -446,9 +462,6 @@ export function GameScreen({
                   End match
                 </button>
               )}
-              <button type="button" className="btn btn--ghost" onClick={() => setConfirm('exit')}>
-                Return to menu
-              </button>
             </div>
           </div>
         </div>
@@ -459,6 +472,7 @@ export function GameScreen({
         <Tutorial
           onDone={() => {
             setRulesOpen(false)
+            if (!menuOpen) resumeFromUi()
           }}
         />
       )}

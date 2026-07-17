@@ -1,3 +1,4 @@
+import { ControlIcon } from '../components/ControlIcon.tsx'
 import type { Prefs } from '../engine/persist.ts'
 import type { ClockType, MatchFormat } from '../engine/types.ts'
 
@@ -33,7 +34,7 @@ export function Config({ prefs, onChange, onBack, onStart, onOpenSettings }: Con
           aria-label="Settings"
           onClick={onOpenSettings}
         >
-          ⚙
+          <ControlIcon type="gear" size="1.2em" />
         </button>
       </div>
 
