@@ -504,6 +504,10 @@ label.check:has(input:checked) {
 /* ---------- piece glyphs ---------- */
 .glyph {
   display: block;
+  /* SVG roots clip to their viewport by default, which chops the glyphs'
+     drop-shadow glow into a visible rectangle at larger sizes instead of
+     letting it fade out smoothly. */
+  overflow: visible;
 }
 
 /* ---------- game screen layout ---------- */
