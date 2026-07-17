@@ -463,21 +463,6 @@ export function GameScreen({
         />
       )}
 
-      {/* Confirmation dialogs */}
-      {confirm !== null && (
-        <ConfirmDialog
-          title={confirmProps[confirm].title}
-          message={confirmProps[confirm].message}
-          confirmLabel={confirmProps[confirm].confirmLabel}
-          danger={confirm === 'endMatch' || confirm === 'exit'}
-          onConfirm={confirmProps[confirm].action}
-          onCancel={() => {
-            setConfirm(null)
-            if (!menuOpen && state.status === 'playing') resumeFromUi()
-          }}
-        />
-      )}
-
       {/* Round result */}
       {state.status === 'roundComplete' && state.roundResult && resultVisible && (
         <div className="overlay" role="dialog" aria-modal="true" aria-label="Round result">
@@ -569,6 +554,22 @@ export function GameScreen({
             </div>
           </div>
         </>
+      )}
+
+      {/* Confirmation dialogs — rendered last so they always stack above
+          any other open overlay (round/match result, pause, menu). */}
+      {confirm !== null && (
+        <ConfirmDialog
+          title={confirmProps[confirm].title}
+          message={confirmProps[confirm].message}
+          confirmLabel={confirmProps[confirm].confirmLabel}
+          danger={confirm === 'endMatch' || confirm === 'exit'}
+          onConfirm={confirmProps[confirm].action}
+          onCancel={() => {
+            setConfirm(null)
+            if (!menuOpen && state.status === 'playing') resumeFromUi()
+          }}
+        />
       )}
     </div>
   )

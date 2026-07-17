@@ -238,7 +238,7 @@ export default function App() {
   const rematch = useCallback(() => {
     const m = matchRef.current
     if (!m) return
-    dispatch({ type: 'SET_MATCH', match: createMatch({ ...m.players }, m.config) })
+    dispatch({ type: 'SET_MATCH', match: createMatch({ ...m.players }, m.config, m.ai) })
   }, [])
 
   const savedNames =
