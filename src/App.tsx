@@ -25,6 +25,12 @@ type Screen = 'welcome' | 'setup' | 'config' | 'game'
 
 type ShellAction = { type: 'SET_MATCH'; match: MatchState | null } | MatchAction
 
+// AI move timing (in ms): "thinking" delay + random jitter
+const AI_THINK_BASE = 650
+const AI_THINK_JITTER = 450
+const AI_MOVE_BASE = 450
+const AI_MOVE_JITTER = 250
+
 function shellReducer(match: MatchState | null, action: ShellAction): MatchState | null {
   if (action.type === 'SET_MATCH') return action.match
   return match ? matchReducer(match, action) : match
@@ -175,7 +181,7 @@ export default function App() {
     if (activeSymbol(match) !== aiSymbol) return
 
     const timers: ReturnType<typeof setTimeout>[] = []
-    const think = 650 + Math.random() * 450
+    const think = AI_THINK_BASE + Math.random() * AI_THINK_JITTER
     if (match.selected === null) {
       const decision = chooseAiMove(match)
       timers.push(
@@ -190,7 +196,7 @@ export default function App() {
       timers.push(
         setTimeout(
           () => dispatch({ type: 'MOVE', cell: decision.cell, now: Date.now() }),
-          450 + Math.random() * 250,
+          AI_MOVE_BASE + Math.random() * AI_MOVE_JITTER,
         ),
       )
     }

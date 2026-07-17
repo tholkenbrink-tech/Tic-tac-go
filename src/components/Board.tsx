@@ -56,8 +56,8 @@ export function Board({
   // visible once a key is used, so touch players never see it.
   const [cursor, setCursor] = useState<CellIndex>(4)
   const [kbActive, setKbActive] = useState(false)
-  const stateRef = useRef({ state, interactive: acceptInput, keyboardEnabled })
-  stateRef.current = { state, interactive: acceptInput, keyboardEnabled }
+  const stateRef = useRef({ state, interactive: acceptInput, keyboardEnabled, cursor })
+  stateRef.current = { state, interactive: acceptInput, keyboardEnabled, cursor }
   const actionsRef = useRef({ onCellTap, onPieceTap, onEscape })
   actionsRef.current = { onCellTap, onPieceTap, onEscape }
 
@@ -97,16 +97,14 @@ export function Board({
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault()
         setKbActive(true)
-        setCursor((prev) => {
-          const occupant = s.board[prev] ?? null
-          const activePiece = expectedPiece(s.turn)
-          if (occupant !== null && occupant === activePiece) {
-            actionsRef.current.onPieceTap(occupant)
-          } else {
-            actionsRef.current.onCellTap(prev)
-          }
-          return prev
-        })
+        const { cursor: c } = stateRef.current
+        const occupant = s.board[c] ?? null
+        const activePiece = expectedPiece(s.turn)
+        if (occupant !== null && occupant === activePiece) {
+          actionsRef.current.onPieceTap(occupant)
+        } else {
+          actionsRef.current.onCellTap(c)
+        }
       }
     }
     function onPointerDown() {

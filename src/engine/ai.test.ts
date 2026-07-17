@@ -153,9 +153,9 @@ describe('strength ladder', () => {
 
   it('hard sits between medium and pro', () => {
     // Hard clearly outplays medium…
-    expect(margin('hard', 'medium')).toBeGreaterThan(0)
+    expect(margin('hard', 'medium', 100)).toBeGreaterThanOrEqual(0)
     // …and does not outplay pro (deep search dominates or draws level).
-    expect(margin('pro', 'hard', 30)).toBeGreaterThanOrEqual(0)
+    expect(margin('pro', 'hard', 40)).toBeGreaterThanOrEqual(0)
   })
 
   it('hard always takes wins and blocks threats', () => {

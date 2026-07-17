@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Board } from '../components/Board.tsx'
 import { ConfirmDialog } from '../components/ConfirmDialog.tsx'
+import { ControlIcon } from '../components/ControlIcon.tsx'
 import { PlayerPanel } from '../components/PlayerPanel.tsx'
 import { Tutorial } from './Tutorial.tsx'
 import { activeSymbol, canRequestUndo, symbolForPlayer } from '../engine/reducer.ts'
@@ -34,6 +35,8 @@ const REASON_TEXT: Record<Exclude<RoundResult['reason'], never>, string> = {
   manual: 'Round ended manually',
 }
 
+const CONFETTI_PARTICLE_COUNT = 60
+
 function clockRules(state: MatchState): { k: string; v: string }[] {
   const c = state.config.clock
   const rules: { k: string; v: string }[] = []
@@ -58,7 +61,7 @@ function clockRules(state: MatchState): { k: string; v: string }[] {
 }
 
 function Confetti() {
-  const pieces = Array.from({ length: 60 }, (_, i) => {
+  const pieces = Array.from({ length: CONFETTI_PARTICLE_COUNT }, (_, i) => {
     const left = (i * 61) % 100
     const delay = ((i * 37) % 100) / 90
     const duration = 2.4 + ((i * 13) % 10) / 8
@@ -237,7 +240,7 @@ export function GameScreen({
             <div className="overlay-card overlay-card--compact">
               {layout === 'faceToFace' && (
                 <p className="pause-flag flip" aria-hidden>
-                  ⏸ Paused
+                  <ControlIcon type="pause" size="1.2em" /> Paused
                 </p>
               )}
               <button
@@ -249,9 +252,9 @@ export function GameScreen({
                   dispatch({ type: 'RESUME', now: Date.now() })
                 }}
               >
-                ▶ Resume
+                <ControlIcon type="resume" size="1.2em" /> Resume
               </button>
-              <p className="pause-flag">⏸ Paused</p>
+              <p className="pause-flag"><ControlIcon type="pause" size="1.2em" /> Paused</p>
             </div>
           </div>
         )}
@@ -271,7 +274,15 @@ export function GameScreen({
               }
             }}
           >
-            {state.paused ? '▶ Resume' : '⏸ Pause'}
+            {state.paused ? (
+              <>
+                <ControlIcon type="resume" size="1em" /> Resume
+              </>
+            ) : (
+              <>
+                <ControlIcon type="pause" size="1em" /> Pause
+              </>
+            )}
           </button>
         )}
         {playing && (
@@ -282,11 +293,11 @@ export function GameScreen({
             aria-label={`Undo last move, ${undosLeft} of ${MAX_UNDOS_PER_ROUND} left this round`}
             onClick={() => dispatch({ type: 'REQUEST_UNDO', now: Date.now() })}
           >
-            ↶ Undo ({undosLeft})
+            <ControlIcon type="undo" size="1em" /> Undo ({undosLeft})
           </button>
         )}
         <button type="button" className="ctl" onClick={openMenu}>
-          ☰ Menu
+          <ControlIcon type="menu" size="1em" /> Menu
         </button>
       </div>
 
