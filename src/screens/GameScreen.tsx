@@ -230,7 +230,7 @@ export function GameScreen({
             <div className="overlay-card overlay-card--compact">
               {layout === 'faceToFace' && (
                 <p className="pause-flag flip" aria-hidden>
-                  <ControlIcon type="pause" size="1.2em" /> Paused
+                  <ControlIcon type="pause" size="1em" /> Paused
                 </p>
               )}
               <button
@@ -244,7 +244,7 @@ export function GameScreen({
               >
                 <ControlIcon type="resume" size="1.2em" /> Resume
               </button>
-              <p className="pause-flag"><ControlIcon type="pause" size="1.2em" /> Paused</p>
+              <p className="pause-flag"><ControlIcon type="pause" size="1em" /> Paused</p>
             </div>
           </div>
         )}
