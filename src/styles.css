@@ -1224,8 +1224,9 @@ label.check:has(input:checked) {
 }
 
 .pause-flag {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   font-size: 15px;
   font-weight: 500;
@@ -1236,7 +1237,8 @@ label.check:has(input:checked) {
   border: 0.5px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
   padding: 10px 16px;
-  margin: 0;
+  margin: 0 auto;
+  width: fit-content;
   backdrop-filter: blur(8px);
 }
 
