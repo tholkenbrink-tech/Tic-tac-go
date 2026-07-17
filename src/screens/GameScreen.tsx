@@ -233,6 +233,11 @@ export function GameScreen({
                   <ControlIcon type="pause" size="1em" /> Paused
                 </p>
               )}
+              {layout !== 'faceToFace' && (
+                <p className="pause-flag">
+                  <ControlIcon type="pause" size="1em" /> Paused
+                </p>
+              )}
               <button
                 type="button"
                 className="btn btn--primary"
@@ -244,7 +249,6 @@ export function GameScreen({
               >
                 <ControlIcon type="resume" size="1.2em" /> Resume
               </button>
-              <p className="pause-flag"><ControlIcon type="pause" size="1em" /> Paused</p>
             </div>
           </div>
         )}
