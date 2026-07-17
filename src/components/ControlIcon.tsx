@@ -22,8 +22,9 @@ export function ControlIcon({ type, size = '1em' }: { type: IconType; size?: str
 
   if (type === 'undo') {
     return (
-      <svg viewBox="0 0 48 48" style={style} aria-hidden fill="currentColor">
-        <path d="M 36 12 Q 28 12 24 18 Q 22 20 22 20 L 28 14 M 12 26 Q 20 26 24 20 Q 26 18 26 18 L 20 24" />
+      <svg viewBox="0 0 48 48" style={style} aria-hidden fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M 8 16 Q 8 10 14 10 L 24 10 Q 36 10 36 18" />
+        <polyline points="30,22 38,14 30,6" />
       </svg>
     )
   }
