@@ -533,9 +533,13 @@ label.check:has(input:checked) {
   gap: 8px;
 }
 
+/* min-height guards against .game-meta and .controls (both flex:1, so they
+   can each center within their own share of the leftover space) squeezing
+   this below the board's own rendered size — keep it matched to
+   .board-wrap's width formula at each breakpoint below. */
 .game-mid {
   flex: 1;
-  min-height: 0;
+  min-height: min(62dvh, 440px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -594,7 +598,6 @@ label.check:has(input:checked) {
 
   .game--side .game-meta {
     grid-area: meta;
-    margin: 0;
   }
 
   .game--side .panel--p2 {
@@ -611,7 +614,6 @@ label.check:has(input:checked) {
 
   .game--side .controls {
     grid-area: controls;
-    margin: 0;
     padding-bottom: 6px;
   }
 
@@ -757,9 +759,15 @@ label.check:has(input:checked) {
   flex: none;
 }
 
+/* Grows to share the leftover space with .game-mid and .controls, then
+   centers itself within that share — so it sits centered in the gap
+   between the top panel and the board, mirroring .controls below. */
 .game-meta {
-  flex: none;
-  margin: 14px 0;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   color: var(--text-dim);
   font-size: 11px;
@@ -886,6 +894,10 @@ label.check:has(input:checked) {
 @media (min-width: 700px) and (min-height: 900px) {
   .board-wrap {
     width: min(100%, 58dvh, 600px);
+  }
+
+  .game-mid {
+    min-height: min(58dvh, 600px);
   }
 }
 
@@ -1143,18 +1155,20 @@ label.check:has(input:checked) {
 }
 
 /* ---------- game controls ---------- */
-/* A modest fixed margin instead of sharing flex-grow with .game-mid —
-   sharing flex-grow shifted the board itself off-center to make room,
-   which looked worse than the cramped spacing it was meant to fix. This
-   just adds breathing room around Undo/Menu without touching the board's
-   own centering. */
+/* Grows to share the leftover space with .game-mid and .game-meta, then
+   centers the button row within that share — so Undo/Menu sit centered
+   in the gap between the board and the bottom player panel, mirroring
+   .game-meta above. .game-mid keeps its own align-items: center (the
+   board's position never depends on how much space its siblings take),
+   and its min-height guard keeps this from ever squeezing it smaller
+   than the board itself. */
 .controls {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  flex: none;
-  margin: 14px 0;
+  flex: 1;
+  min-height: 0;
 }
 
 /* Borderless "ghost" control: quieter than the bordered .btn family so it
@@ -1464,5 +1478,9 @@ label.check:has(input:checked) {
 
   .board-wrap {
     width: min(100%, 54dvh, 440px);
+  }
+
+  .game-mid {
+    min-height: min(54dvh, 440px);
   }
 }
