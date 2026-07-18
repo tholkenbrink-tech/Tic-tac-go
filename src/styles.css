@@ -594,6 +594,7 @@ label.check:has(input:checked) {
 
   .game--side .game-meta {
     grid-area: meta;
+    margin: 0;
   }
 
   .game--side .panel--p2 {
@@ -758,6 +759,7 @@ label.check:has(input:checked) {
 
 .game-meta {
   flex: none;
+  margin: 14px 0;
   text-align: center;
   color: var(--text-dim);
   font-size: 11px;

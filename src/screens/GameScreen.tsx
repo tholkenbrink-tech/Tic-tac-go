@@ -193,11 +193,13 @@ export function GameScreen({
 
   return (
     <div className={`game game--${layout === 'sideBySide' ? 'side' : 'face'}`}>
-      {/* Match meta shown once, unrotated — deliberately not duplicated for
-          the opposite player in face-to-face play. */}
-      <div className="game-meta">{roundInfo}</div>
-
       <PlayerPanel state={state} viewer="p2" now={now} />
+
+      {/* Match meta shown once, unrotated — deliberately not duplicated for
+          the opposite player in face-to-face play. Sits between the panel
+          and the board with the same margin as .controls below the board,
+          so the two sides of the board read as mirror images. */}
+      <div className="game-meta">{roundInfo}</div>
 
       <div className="game-mid">
         <Board
