@@ -380,10 +380,12 @@ export function GameScreen({
         <div className="overlay" role="dialog" aria-modal="true" aria-label="Game menu">
           <div className="overlay-card">
             <h2>Menu</h2>
-            <div className="stack">
+            <div className="stack stack--loose">
               <button type="button" className="btn btn--primary" onClick={() => closeMenu(true)}>
                 Back to game
               </button>
+
+              <hr className="menu-divider" />
 
               <div>
                 <p className="menu-label">Table layout</p>
@@ -410,19 +412,30 @@ export function GameScreen({
                 </p>
               </div>
 
-              {playing && (
-                <button type="button" className="btn" onClick={() => setConfirm('endRound')}>
-                  End round (no score)
-                </button>
-              )}
-              {state.status !== 'matchComplete' && (
-                <button
-                  type="button"
-                  className="btn btn--danger"
-                  onClick={() => setConfirm('endMatch')}
-                >
-                  End match
-                </button>
+              {(playing || state.status !== 'matchComplete') && (
+                <>
+                  <hr className="menu-divider" />
+                  <div className="stack">
+                    {playing && (
+                      <button
+                        type="button"
+                        className="btn"
+                        onClick={() => setConfirm('endRound')}
+                      >
+                        End round (no score)
+                      </button>
+                    )}
+                    {state.status !== 'matchComplete' && (
+                      <button
+                        type="button"
+                        className="btn btn--danger"
+                        onClick={() => setConfirm('endMatch')}
+                      >
+                        End match
+                      </button>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           </div>

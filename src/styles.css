@@ -492,6 +492,20 @@ label.check:has(input:checked) {
   gap: 10px;
 }
 
+/* Wider gap for menus that group unrelated sections (e.g. the game Menu's
+   primary action / settings / match-ending actions) — dividers need room
+   to read as separators rather than sitting flush against both sides. */
+.stack--loose {
+  gap: 18px;
+}
+
+.menu-divider {
+  height: 1px;
+  margin: 0;
+  border: none;
+  background: var(--line);
+}
+
 .row {
   display: flex;
   gap: 10px;
