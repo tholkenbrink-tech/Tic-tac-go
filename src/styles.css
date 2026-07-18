@@ -533,19 +533,11 @@ label.check:has(input:checked) {
   gap: 8px;
 }
 
-/* min-height guards against .controls (also flex:1, see below) squeezing
-   this below the board's own rendered size — keep it matched to
-   .board-wrap's width formula at each breakpoint below.
-   align-items anchors the board to the bottom of the row's cross axis
-   (this is a row flex container): any leftover space collects above the
-   board instead of splitting above/below, so .controls' own centering
-   (see below) is the only thing between the board and the bottom player
-   panel — keeping Undo/Menu visually centered there. */
 .game-mid {
   flex: 1;
-  min-height: min(62dvh, 440px);
+  min-height: 0;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   position: relative;
 }
@@ -614,13 +606,11 @@ label.check:has(input:checked) {
 
   .game--side .game-mid {
     grid-area: board;
-    /* Controls has its own grid row here, so restore centering the board
-       within the full board row instead of the mobile bottom-anchor. */
-    align-items: center;
   }
 
   .game--side .controls {
     grid-area: controls;
+    margin: 0;
     padding-bottom: 6px;
   }
 
@@ -895,10 +885,6 @@ label.check:has(input:checked) {
   .board-wrap {
     width: min(100%, 58dvh, 600px);
   }
-
-  .game-mid {
-    min-height: min(58dvh, 600px);
-  }
 }
 
 .board {
@@ -1155,15 +1141,18 @@ label.check:has(input:checked) {
 }
 
 /* ---------- game controls ---------- */
-/* Grows to share the leftover space with .game-mid, then centers the
-   button row within that share — so Undo/Menu sit vertically balanced
-   between the board and the bottom player panel, not hugging the panel. */
+/* A modest fixed margin instead of sharing flex-grow with .game-mid —
+   sharing flex-grow shifted the board itself off-center to make room,
+   which looked worse than the cramped spacing it was meant to fix. This
+   just adds breathing room around Undo/Menu without touching the board's
+   own centering. */
 .controls {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  flex: 1;
+  flex: none;
+  margin: 14px 0;
 }
 
 /* Borderless "ghost" control: quieter than the bordered .btn family so it
@@ -1473,9 +1462,5 @@ label.check:has(input:checked) {
 
   .board-wrap {
     width: min(100%, 54dvh, 440px);
-  }
-
-  .game-mid {
-    min-height: min(54dvh, 440px);
   }
 }
