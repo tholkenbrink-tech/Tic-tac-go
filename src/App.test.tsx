@@ -170,18 +170,18 @@ describe('full match integration', () => {
     expect(screen.getByRole('button', { name: /undo last move, 2 of 3 left/i })).toBeEnabled()
   })
 
-  it('can end the match while paused, without resuming first', async () => {
+  it('can end the match from the menu, which pauses on open, without resuming first', async () => {
     savePrefs({ ...DEFAULT_PREFS, p1Name: 'Ada', p2Name: 'Grace', tutorialDone: true })
     const user = userEvent.setup()
     render(<App />)
     await user.click(screen.getByRole('button', { name: /quick play/i }))
     await user.click(await screen.findByRole('button', { name: /^start round$/i }))
     await user.click(screen.getByRole('button', { name: /place x1 on cell 1$/i }))
-    await user.click(screen.getByRole('button', { name: /pause/i }))
-    expect(screen.getByRole('dialog', { name: /game paused/i })).toBeInTheDocument()
 
-    // The menu must stay reachable while paused.
+    // Opening the menu pauses the game directly — there's no separate Pause control.
     await user.click(screen.getByRole('button', { name: /menu/i }))
+    expect(screen.getAllByText(/paused/i).length).toBeGreaterThan(0)
+
     await user.click(screen.getByRole('button', { name: 'End match' }))
     await user.click(screen.getAllByRole('button', { name: 'End match' }).pop()!)
     const result = await screen.findByRole('dialog', { name: /match result/i }, { timeout: 3000 })

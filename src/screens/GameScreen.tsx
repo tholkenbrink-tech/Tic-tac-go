@@ -3,7 +3,6 @@ import { Board } from '../components/Board.tsx'
 import { ConfirmDialog } from '../components/ConfirmDialog.tsx'
 import { ControlIcon } from '../components/ControlIcon.tsx'
 import { PlayerPanel } from '../components/PlayerPanel.tsx'
-import { Tutorial } from './Tutorial.tsx'
 import { activeSymbol, canRequestUndo, symbolForPlayer } from '../engine/reducer.ts'
 import { MAX_UNDOS_PER_ROUND } from '../engine/types.ts'
 import type {
@@ -97,7 +96,6 @@ export function GameScreen({
 }: GameScreenProps) {
   const [confirm, setConfirm] = useState<Confirm>(null)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [rulesOpen, setRulesOpen] = useState(false)
   const [resultVisible, setResultVisible] = useState(false)
   const menuPausedRef = useRef(false)
 
@@ -181,7 +179,7 @@ export function GameScreen({
   const nextXPlayer = state.p1Symbol === 'X' ? 'p2' : 'p1'
 
   const undosLeft = MAX_UNDOS_PER_ROUND - state.undosUsed
-  const overlayOpen = menuOpen || rulesOpen || confirm !== null
+  const overlayOpen = menuOpen || confirm !== null
   // During the computer's turn the human must not act for it.
   const aiTurn =
     state.ai !== null &&
@@ -220,7 +218,7 @@ export function GameScreen({
         {/* Pause overlay covers only the board so the controls row (Menu,
             Resume) stays reachable — ending a paused game must not require
             resuming it first. */}
-        {playing && state.paused && !menuOpen && !rulesOpen && confirm === null && (
+        {playing && state.paused && !menuOpen && confirm === null && (
           <div
             className="overlay overlay--board"
             role="dialog"
@@ -259,30 +257,6 @@ export function GameScreen({
           <button
             type="button"
             className="ctl"
-            onClick={() => {
-              if (state.paused) {
-                menuPausedRef.current = false
-                dispatch({ type: 'RESUME', now: Date.now() })
-              } else {
-                dispatch({ type: 'PAUSE', now: Date.now() })
-              }
-            }}
-          >
-            {state.paused ? (
-              <>
-                <ControlIcon type="resume" size="1em" /> Resume
-              </>
-            ) : (
-              <>
-                <ControlIcon type="pause" size="1em" /> Pause
-              </>
-            )}
-          </button>
-        )}
-        {playing && (
-          <button
-            type="button"
-            className="ctl"
             disabled={!canRequestUndo(state)}
             aria-label={`Undo last move, ${undosLeft} of ${MAX_UNDOS_PER_ROUND} left this round`}
             onClick={() => dispatch({ type: 'REQUEST_UNDO', now: Date.now() })}
@@ -290,17 +264,6 @@ export function GameScreen({
             <ControlIcon type="undo" size="1em" /> Undo ({undosLeft})
           </button>
         )}
-        <button
-          type="button"
-          className="ctl ctl--icon"
-          aria-label="Show rules"
-          onClick={() => {
-            pauseForUi()
-            setRulesOpen(true)
-          }}
-        >
-          <ControlIcon type="help" size="1.1em" />
-        </button>
         <button type="button" className="ctl" onClick={openMenu}>
           <ControlIcon type="menu" size="1em" /> Menu
         </button>
@@ -309,7 +272,7 @@ export function GameScreen({
       <PlayerPanel state={state} viewer="p1" now={now} />
 
       {/* Ready overlay */}
-      {state.status === 'ready' && !menuOpen && !rulesOpen && confirm === null && (
+      {state.status === 'ready' && !menuOpen && confirm === null && (
         <div className="overlay" role="dialog" aria-modal="true" aria-label="Round ready">
           <div className="overlay-card">
             <p className="panel-round" style={{ fontSize: 14 }}>
@@ -350,25 +313,20 @@ export function GameScreen({
             >
               Start round
             </button>
-            <div className="row">
-              <button type="button" className="ctl" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setRulesOpen(true)}>
-                Rules
-              </button>
-              <button
-                type="button"
-                className="ctl"
-                style={{ flex: 1, justifyContent: 'center' }}
-                onClick={() => setConfirm('exit')}
-              >
-                Menu
-              </button>
-            </div>
+            <button
+              type="button"
+              className="ctl"
+              style={{ width: '100%', justifyContent: 'center' }}
+              onClick={openMenu}
+            >
+              <ControlIcon type="menu" size="1em" /> Menu
+            </button>
           </div>
         </div>
       )}
 
       {/* Undo approval — both players must agree; clocks are already stopped. */}
-      {playing && state.undoRequest && !menuOpen && !rulesOpen && confirm === null && (
+      {playing && state.undoRequest && !menuOpen && confirm === null && (
         <div className="overlay" role="dialog" aria-modal="true" aria-label="Undo approval">
           <div className="overlay-card">
             {state.ai ? (
@@ -418,7 +376,7 @@ export function GameScreen({
       )}
 
       {/* Menu sheet */}
-      {menuOpen && confirm === null && !rulesOpen && (
+      {menuOpen && confirm === null && (
         <div className="overlay" role="dialog" aria-modal="true" aria-label="Game menu">
           <div className="overlay-card">
             <h2>Menu</h2>
@@ -469,16 +427,6 @@ export function GameScreen({
             </div>
           </div>
         </div>
-      )}
-
-      {/* Rules overlay (tutorial) */}
-      {rulesOpen && (
-        <Tutorial
-          onDone={() => {
-            setRulesOpen(false)
-            if (!menuOpen) resumeFromUi()
-          }}
-        />
       )}
 
       {/* Round result */}

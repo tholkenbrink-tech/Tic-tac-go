@@ -322,7 +322,7 @@ export default function App() {
         <GameScreen
           state={match}
           now={now}
-          layout={match.ai ? 'sideBySide' : resolveLayout(prefs.layout)}
+          layout={resolveLayout(prefs.layout)}
           onToggleLayout={() =>
             updatePrefs({
               layout: resolveLayout(prefs.layout) === 'faceToFace' ? 'sideBySide' : 'faceToFace',

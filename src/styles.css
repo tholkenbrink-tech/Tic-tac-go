@@ -1154,11 +1154,6 @@ label.check:has(input:checked) {
   outline-offset: 2px;
 }
 
-.ctl--icon {
-  padding-left: 10px;
-  padding-right: 10px;
-}
-
 /* ---------- overlays ---------- */
 .overlay {
   position: fixed;
