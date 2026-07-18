@@ -519,11 +519,19 @@ label.check:has(input:checked) {
   gap: 8px;
 }
 
+/* min-height guards against .controls (also flex:1, see below) squeezing
+   this below the board's own rendered size — keep it matched to
+   .board-wrap's width formula at each breakpoint below.
+   align-items anchors the board to the bottom of the row's cross axis
+   (this is a row flex container): any leftover space collects above the
+   board instead of splitting above/below, so .controls' own centering
+   (see below) is the only thing between the board and the bottom player
+   panel — keeping Undo/Menu visually centered there. */
 .game-mid {
   flex: 1;
-  min-height: 0;
+  min-height: min(62dvh, 440px);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   position: relative;
 }
@@ -592,6 +600,9 @@ label.check:has(input:checked) {
 
   .game--side .game-mid {
     grid-area: board;
+    /* Controls has its own grid row here, so restore centering the board
+       within the full board row instead of the mobile bottom-anchor. */
+    align-items: center;
   }
 
   .game--side .controls {
@@ -870,6 +881,10 @@ label.check:has(input:checked) {
   .board-wrap {
     width: min(100%, 58dvh, 600px);
   }
+
+  .game-mid {
+    min-height: min(58dvh, 600px);
+  }
 }
 
 .board {
@@ -1126,20 +1141,27 @@ label.check:has(input:checked) {
 }
 
 /* ---------- game controls ---------- */
+/* Grows to share the leftover space with .game-mid, then centers the
+   button row within that share — so Undo/Menu sit vertically balanced
+   between the board and the bottom player panel, not hugging the panel. */
 .controls {
   display: flex;
+  align-items: center;
   justify-content: center;
   gap: 10px;
-  flex: none;
+  flex: 1;
 }
 
+/* Borderless "ghost" control: quieter than the bordered .btn family so it
+   doesn't compete with the board, but keeps a visible press/focus state so
+   it stays discoverable and accessible without a permanent outline. */
 .ctl {
   min-width: 44px;
   min-height: 44px;
-  padding: 6px 14px;
+  padding: 8px 18px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--line);
-  background: var(--bg-raised);
+  border: none;
+  background: transparent;
   color: var(--text-dim);
   font-size: 14px;
   font-weight: 700;
@@ -1147,6 +1169,23 @@ label.check:has(input:checked) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.ctl:hover:not(:disabled) {
+  background: var(--bg-raised);
+  color: var(--text);
+}
+
+.ctl:active:not(:disabled) {
+  background: var(--bg-sunken);
+}
+
+.ctl:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .ctl:focus-visible {
@@ -1420,5 +1459,9 @@ label.check:has(input:checked) {
 
   .board-wrap {
     width: min(100%, 54dvh, 440px);
+  }
+
+  .game-mid {
+    min-height: min(54dvh, 440px);
   }
 }
